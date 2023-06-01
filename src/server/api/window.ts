@@ -4,6 +4,7 @@ import state from '../state'
 import {join} from "path";
 import {notifyLaravel} from "../utils";
 const router = express.Router();
+import windowStateKeeper from "electron-window-state";
 
 router.post('/resize', (req, res) => {
     const {id, width, height} = req.body
@@ -77,12 +78,21 @@ router.post('/open', (req, res) => {
         preloadPath = join(__dirname, '../preload/index.js')
     }
 
+    let windowState: windowStateKeeper.State | undefined = undefined
+
+    if (req.body.manageState === true) {
+      windowState = windowStateKeeper({
+        defaultHeight: parseInt(height),
+        defaultWidth: parseInt(width),
+      })
+    }
+
     const window = new BrowserWindow({
-        width: parseInt(width),
-        height: parseInt(height),
+        width: windowState?.width || parseInt(width),
+        height: windowState?.height || parseInt(height),
         frame: frame !== undefined ? frame : true,
-        x,
-        y,
+        x: windowState?.x || x,
+        y: windowState?.y || y,
         show: false,
         title,
         backgroundColor,
@@ -106,6 +116,10 @@ router.post('/open', (req, res) => {
     })
 
     require("@electron/remote/main").enable(window.webContents)
+
+    if (req.body.manageState === true) {
+      windowState.manage(window)
+    }
 
     window.on('blur', () => {
         window.webContents.send('window:blur')
