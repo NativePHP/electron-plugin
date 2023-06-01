@@ -1,5 +1,5 @@
 import {shell} from "electron";
-import {notifyLaravel} from "../../index";
+import {notifyLaravel} from "../../utils";
 
 function triggerMenuItemEvent(menuItem) {
     notifyLaravel('events', {

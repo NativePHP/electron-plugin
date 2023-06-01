@@ -19,6 +19,7 @@
     ],
     "types": [
       "node",
+      "jest",
       "electron"
     ]
   },

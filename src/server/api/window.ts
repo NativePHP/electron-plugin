@@ -1,9 +1,8 @@
 import express from 'express'
 import {BrowserWindow, clipboard, NativeImage} from 'electron'
 import state from '../state'
-//import icon from "../../../../resources/icon.png";
 import {join} from "path";
-import {notifyLaravel} from "../index";
+import {notifyLaravel} from "../utils";
 const router = express.Router();
 
 router.post('/resize', (req, res) => {

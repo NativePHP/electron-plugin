@@ -1,6 +1,6 @@
 import express from 'express'
 import { Notification } from 'electron'
-import {notifyLaravel} from "../index";
+import {notifyLaravel} from "../utils";
 const router = express.Router();
 
 router.post('/', (req, res) => {

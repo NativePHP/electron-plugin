@@ -2,7 +2,8 @@ import type CrossProcessExports from 'electron'
 import { autoUpdater } from "electron-updater"
 import state from './server/state'
 import {electronApp, optimizer, is} from '@electron-toolkit/utils'
-import {notifyLaravel, startAPI, runScheduler, servePhpApp, serveWebsockets, retrieveNativePHPConfig} from './server'
+import {startAPI, runScheduler, servePhpApp, serveWebsockets, retrieveNativePHPConfig} from './server'
+import {notifyLaravel} from "./server/utils";
 import { app, BrowserWindow } from "electron";
 import { resolve } from "path";
 import ps from 'ps-node'
@@ -113,9 +114,9 @@ class NativePHP {
 
       // Start PHP server and websockets
       const apiPort = await startAPI()
-      console.log('API server started on port', apiPort);
+      console.log('API server started on port', apiPort.port);
 
-      phpProcesses = await servePhpApp(apiPort)
+      phpProcesses = await servePhpApp(apiPort.port)
 
       websocketProcess = serveWebsockets()
 
@@ -128,7 +129,7 @@ class NativePHP {
 
       schedulerInterval = setInterval(() => {
         console.log("Running scheduler...")
-        runScheduler(apiPort);
+        runScheduler(apiPort.port);
       }, 60 * 1000);
 
       app.on('activate', function () {

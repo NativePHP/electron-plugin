@@ -1,6 +1,5 @@
 import express from 'express'
 import {systemPreferences} from 'electron'
-import {notifyLaravel} from "../index";
 const router = express.Router();
 
 router.get('/can-prompt-touch-id', (req, res) => {

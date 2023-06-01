@@ -3,7 +3,7 @@ import {Menu, nativeImage} from 'electron'
 import {mapMenu} from "./helper";
 import state from "../state"
 import {menubar} from 'menubar';
-import {notifyLaravel} from "../index";
+import {notifyLaravel} from "../utils";
 const router = express.Router();
 
 router.post('/api/menubar/label', (req, res) => {

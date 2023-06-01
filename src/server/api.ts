@@ -17,8 +17,14 @@ import windowRoutes from "./api/window";
 import processRoutes from "./api/process";
 import contextMenuRoutes from "./api/contextMenu";
 import progressBarRoutes from "./api/progressBar";
+import { Server } from "net";
 
-async function startAPIServer(randomSecret: string): Promise<number> {
+export interface APIProcess {
+  server: Server;
+  port: number;
+}
+
+async function startAPIServer(randomSecret: string): Promise<APIProcess> {
   const port = await getPort({
     port: getPort.makeRange(4000, 5000),
   });
@@ -41,8 +47,11 @@ async function startAPIServer(randomSecret: string): Promise<number> {
     httpServer.use("/api/context", contextMenuRoutes);
     httpServer.use("/api/progress-bar", progressBarRoutes);
 
-    httpServer.listen(port, () => {
-      resolve(port);
+    const server = httpServer.listen(port, () => {
+      resolve({
+        server,
+        port,
+      });
     });
   });
 }
