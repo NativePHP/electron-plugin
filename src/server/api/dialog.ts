@@ -1,17 +1,8 @@
 import express from 'express'
 import {dialog} from 'electron'
 import state from '../state'
+import {trimOptions} from '../utils'
 const router = express.Router();
-
-function trimOptions(options) {
-    Object.keys(options).forEach(key => options[key] == null && delete options[key]);
-
-    return options;
-}
-
-function findWindow(id) {
-    return state.windows[id] || null
-}
 
 router.post('/open', (req, res) => {
     const {title, buttonLabel, filters, properties, defaultPath, message, windowReference} = req.body
@@ -27,8 +18,9 @@ router.post('/open', (req, res) => {
 
     options = trimOptions(options);
 
-    let browserWindow = findWindow(windowReference);
-    let result = null;
+    let result;
+    let browserWindow = state.findWindow(windowReference);
+
     if (browserWindow) {
         result = dialog.showOpenDialogSync(browserWindow, options)
     } else {

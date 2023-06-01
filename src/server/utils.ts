@@ -26,3 +26,12 @@ export async function notifyLaravel(endpoint: string, payload = {}) {
     //
   }
 }
+
+/**
+ * Remove null and undefined values from an object
+ */
+export function trimOptions(options: any): any {
+  Object.keys(options).forEach(key => options[key] == null && delete options[key]);
+
+  return options;
+}

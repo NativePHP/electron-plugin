@@ -68,8 +68,6 @@ describe('Clipboard test', () => {
   });
 
   it('returns an error when trying to write an invalid data URL as image', async () => {
-    const electron = require('electron');
-
     try {
       const response = await axios.post('/clipboard/image', {
         image: 'new image data URL',

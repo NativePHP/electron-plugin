@@ -7,7 +7,8 @@ interface State {
   caCert: string | null;
   icon: string | null
   windows: Record<string, BrowserWindow>
-  randomSecret: string
+  randomSecret: string,
+  findWindow: (id: string) => BrowserWindow | null
 }
 
 function generateRandomString(length: number) {
@@ -30,5 +31,8 @@ export default {
     caCert: null,
     icon: null,
     randomSecret: generateRandomString(32),
-    windows: {}
+    windows: {},
+    findWindow(id: string) {
+      return this.windows[id] || null
+    }
 } as State;
