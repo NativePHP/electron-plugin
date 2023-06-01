@@ -36,6 +36,13 @@ async function retrieveNativePHPConfig() {
 }
 
 function callPhp(args, options) {
+    // Add mandatory php.ini settings
+    args.unshift(
+      '-d', 'memory_limit=512M',
+      '-d', 'curl.cainfo=' + state.caCert,
+      '-d', 'openssl.cafile=' + state.caCert
+    );
+
     return spawn(
         state.php,
         args,

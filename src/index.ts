@@ -29,11 +29,12 @@ const killChildProcesses = () => {
 }
 
 class NativePHP {
-  public bootstrap(app: CrossProcessExports.App, icon: string, phpBinary: string) {
+  public bootstrap(app: CrossProcessExports.App, icon: string, phpBinary: string, cert: string) {
     require('@electron/remote/main').initialize();
 
     state.icon = icon;
     state.php = phpBinary;
+    state.caCert = cert;
 
     this.bootstrapApp(app);
     this.addEventListeners(app);
