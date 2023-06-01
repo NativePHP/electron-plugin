@@ -40,7 +40,9 @@ router.post('/html', (req, res) => {
     // @ts-ignore
     clipboard.writeHTML(html, type || DEFAULT_TYPE)
 
-    res.sendStatus(200);
+    res.json({
+      html,
+    })
 });
 
 router.get('/image', (req, res) => {
@@ -57,9 +59,16 @@ router.post('/image', (req, res) => {
     const {image} = req.body
     const {type} = req.query
 
-    const _nativeImage = nativeImage.createFromDataURL(image)
-    // @ts-ignore
-    clipboard.writeImage(_nativeImage, type || DEFAULT_TYPE)
+    try {
+      const _nativeImage = nativeImage.createFromDataURL(image)
+      // @ts-ignore
+      clipboard.writeImage(_nativeImage, type || DEFAULT_TYPE)
+    } catch (e) {
+      res.status(400).json({
+        error: e.message,
+      })
+      return
+    }
 
     res.sendStatus(200);
 });

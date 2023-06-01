@@ -4,8 +4,10 @@ import axios from "axios";
 let apiServer: APIProcess;
 
 describe('API test', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.resetModules();
+    apiServer = await startAPIServer('randomSecret');
+    axios.defaults.baseURL = `http://localhost:${apiServer.port}`;
   })
 
   afterEach(done => {
@@ -13,13 +15,10 @@ describe('API test', () => {
   });
 
   it('starts API server on port 4000', async () => {
-    apiServer = await startAPIServer('randomSecret')
     expect(apiServer.port).toBe(4000);
   });
 
   it('uses the next available API port', async () => {
-    apiServer = await startAPIServer('randomSecret');
-
     const nextApiProcess = await startAPIServer('randomSecret');
     expect(nextApiProcess.port).toBe(apiServer.port + 1);
 
@@ -27,9 +26,6 @@ describe('API test', () => {
   });
 
   it('protects API endpoints with a secret', async () => {
-    apiServer = await startAPIServer('randomSecret!');
-
-    axios.defaults.baseURL = `http://localhost:${apiServer.port}`;
     try {
       await axios.get('/api/process')
     } catch (error) {
@@ -38,7 +34,7 @@ describe('API test', () => {
 
     const response = await axios.get('/api/process', {
       headers: {
-        'x-nativephp-secret': 'randomSecret!',
+        'x-nativephp-secret': 'randomSecret',
       }
     })
 
