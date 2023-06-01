@@ -1,4 +1,3 @@
-import { join } from 'path'
 import { spawn } from 'child_process'
 import { getAppPath } from './php'
 import state from './state'
