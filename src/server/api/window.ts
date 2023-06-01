@@ -123,22 +123,40 @@ router.post('/open', (req, res) => {
 
     window.on('blur', () => {
         window.webContents.send('window:blur')
+        notifyLaravel('events', {
+          event: 'Native\\Laravel\\Events\\Windows\\WindowBlurred',
+          payload: [id]
+        })
     });
 
     window.on('focus', () => {
         window.webContents.send('window:focus')
         notifyLaravel('events', {
-            event: 'App\\Events\\WindowFocused',
-            payload: [window.webContents.getURL()]
+            event: 'Native\\Laravel\\Events\\Windows\\WindowFocused',
+            payload: [id]
         })
     })
 
     window.on('minimize', () => {
         notifyLaravel('events', {
-            event: 'App\\Events\\WindowMinimized',
-            payload: [window.webContents.getURL()]
+            event: 'Native\\Laravel\\Events\\Windows\\WindowMinimized',
+            payload: [id]
         })
     })
+
+    window.on('maximize', () => {
+      notifyLaravel('events', {
+        event: 'Native\\Laravel\\Events\\Windows\\WindowMaximized',
+        payload: [id]
+      })
+    })
+
+    window.on('resized', () => {
+      notifyLaravel('events', {
+        event: 'Native\\Laravel\\Events\\Windows\\WindowResized',
+        payload: [id, window.getSize()[0], window.getSize()[1]]
+      })
+    });
 
     window.on('page-title-updated', (evt) => {
         evt.preventDefault()
@@ -149,8 +167,8 @@ router.post('/open', (req, res) => {
             delete state.windows[id]
         }
         notifyLaravel('events', {
-            event: 'App\\Events\\WindowClosed',
-            payload: [window.webContents.getURL()]
+            event: 'Native\\Laravel\\Events\\Windows\\WindowClosed',
+            payload: [id]
         })
     })
 
