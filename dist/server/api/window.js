@@ -75,6 +75,9 @@ router.post('/open', (req, res) => {
             contextIsolation: false,
             nodeIntegration: true,
         } }));
+    if (process.env.NODE_ENV === 'development') {
+        window.webContents.openDevTools();
+    }
     require("@electron/remote/main").enable(window.webContents);
     if (req.body.manageState === true) {
         windowState.manage(window);
