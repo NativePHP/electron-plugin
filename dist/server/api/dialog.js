@@ -32,7 +32,7 @@ router.post('/open', (req, res) => {
     });
 });
 router.post('/save', (req, res) => {
-    const { title, buttonLabel, filters, properties, defaultPath, message } = req.body;
+    const { title, buttonLabel, filters, properties, defaultPath, message, windowReference } = req.body;
     let options = {
         title,
         defaultPath,
@@ -42,7 +42,14 @@ router.post('/save', (req, res) => {
         properties
     };
     options = (0, utils_1.trimOptions)(options);
-    const result = electron_1.dialog.showSaveDialogSync(options);
+    let result;
+    let browserWindow = state_1.default.findWindow(windowReference);
+    if (browserWindow) {
+        result = electron_1.dialog.showSaveDialogSync(browserWindow, options);
+    }
+    else {
+        result = electron_1.dialog.showSaveDialogSync(options);
+    }
     res.json({
         result
     });

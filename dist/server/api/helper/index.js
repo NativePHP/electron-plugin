@@ -36,6 +36,7 @@ const mapMenu = (menu) => {
     if (menu.type === 'event') {
         return {
             label: menu.label,
+            accelerator: menu.accelerator,
             click() {
                 (0, utils_1.notifyLaravel)('events', {
                     event: menu.event

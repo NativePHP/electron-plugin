@@ -99,6 +99,8 @@ function ensureAppFoldersAreAvailable() {
 
 function startQueueWorker(secret, apiPort) {
     const env = {
+        APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
+        APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
         NATVEPHP_STORAGE_PATH: storagePath,
         NATVEPHP_DATABASE_PATH: databaseFile,
         NATVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
@@ -116,6 +118,8 @@ function startQueueWorker(secret, apiPort) {
 
 function startScheduler(secret, apiPort) {
     const env = {
+        APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
+        APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
         NATIVEPHP_STORAGE_PATH: storagePath,
         NATIVEPHP_DATABASE_PATH: databaseFile,
         NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
@@ -142,6 +146,8 @@ function serveApp(secret, apiPort): Promise<ProcessResult> {
         console.log('Making sure app folders are available')
 
         const env = {
+            APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
+            APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
             NATIVEPHP_STORAGE_PATH: storagePath,
             NATIVEPHP_DATABASE_PATH: databaseFile,
             NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
@@ -192,7 +198,6 @@ function serveApp(secret, apiPort): Promise<ProcessResult> {
         })
 
         phpServer.stderr.on('data', (data) => {
-            console.log(data.toString())
             const match = portRegex.exec(data.toString())
             if (match) {
                 const port = parseInt(match[1])

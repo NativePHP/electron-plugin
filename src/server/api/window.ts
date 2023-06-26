@@ -75,10 +75,7 @@ router.post('/open', (req, res) => {
         return res.sendStatus(200)
     }
 
-    let preloadPath = join(__dirname, '../../../preload/index.js')
-    if (process.env.NODE_ENV === 'development') {
-        preloadPath = join(__dirname, '../preload/index.js')
-    }
+    let preloadPath = join(__dirname, '../../preload/index.js')
 
     let windowState: windowStateKeeper.State | undefined = undefined
 

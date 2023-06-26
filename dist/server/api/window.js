@@ -50,10 +50,7 @@ router.post('/open', (req, res) => {
         state_1.default.windows[id].focus();
         return res.sendStatus(200);
     }
-    let preloadPath = (0, path_1.join)(__dirname, '../../../preload/index.js');
-    if (process.env.NODE_ENV === 'development') {
-        preloadPath = (0, path_1.join)(__dirname, '../preload/index.js');
-    }
+    let preloadPath = (0, path_1.join)(__dirname, '../../preload/index.js');
     let windowState = undefined;
     if (req.body.manageState === true) {
         windowState = (0, electron_window_state_1.default)({

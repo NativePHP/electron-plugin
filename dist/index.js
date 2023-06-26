@@ -16,7 +16,6 @@ const state_1 = __importDefault(require("./server/state"));
 const utils_1 = require("@electron-toolkit/utils");
 const server_1 = require("./server");
 const utils_2 = require("./server/utils");
-const electron_1 = require("electron");
 const path_1 = require("path");
 const ps_node_1 = __importDefault(require("ps-node"));
 let phpProcesses = [];
@@ -29,7 +28,6 @@ const killChildProcesses = () => {
     ];
     processes.forEach((process) => {
         try {
-            console.log(`Killing process ${process.pid}`);
             ps_node_1.default.kill(process.pid);
         }
         catch (err) {
@@ -115,9 +113,11 @@ class NativePHP {
                 console.log("Running scheduler...");
                 (0, server_1.runScheduler)(apiPort.port);
             }, 60 * 1000);
-            app.on('activate', function () {
-                if (electron_1.BrowserWindow.getAllWindows().length === 0)
+            app.on('activate', function (event, hasVisibleWindows) {
+                if (!hasVisibleWindows) {
                     (0, utils_2.notifyLaravel)('booted');
+                }
+                event.preventDefault();
             });
         }));
     }

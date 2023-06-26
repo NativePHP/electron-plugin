@@ -21,7 +21,6 @@ const killChildProcesses = () => {
 
   processes.forEach((process) => {
     try {
-      console.log(`Killing process ${process.pid}`)
       ps.kill(process.pid);
     } catch (err) {
       console.error(err);
@@ -132,10 +131,13 @@ class NativePHP {
         runScheduler(apiPort.port);
       }, 60 * 1000);
 
-      app.on('activate', function () {
+      app.on('activate', function (event, hasVisibleWindows) {
         // On macOS it's common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
-        if (BrowserWindow.getAllWindows().length === 0) notifyLaravel('booted')
+        if (!hasVisibleWindows) {
+          notifyLaravel('booted')
+        }
+        event.preventDefault();
       })
     })
   }

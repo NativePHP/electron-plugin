@@ -5,24 +5,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const electron_1 = require("electron");
+const helper_1 = require("./helper");
 const state_1 = __importDefault(require("../state"));
 const menubar_1 = require("menubar");
 const utils_1 = require("../utils");
 const router = express_1.default.Router();
-router.post('/api/menubar/label', (req, res) => {
+router.post("/label", (req, res) => {
     res.sendStatus(200);
     const { label } = req.body;
     state_1.default.activeMenuBar.tray.setTitle(label);
 });
-router.post('/api/menubar', (req, res) => {
+router.post("/create", (req, res) => {
     res.sendStatus(200);
-    const { id, width, height, url, alwaysOnTop, vibrancy, backgroundColor, transparency, icon, showDockIcon } = req.body;
-    if (!showDockIcon) {
-    }
-    else {
-    }
+    const { id, width, height, url, alwaysOnTop, vibrancy, backgroundColor, transparency, icon, showDockIcon, contextMenu } = req.body;
     state_1.default.activeMenuBar = (0, menubar_1.menubar)({
-        icon,
+        icon: icon || state_1.default.icon.replace("icon.png", "IconTemplate.png"),
         index: url,
         showDockIcon,
         browserWindow: {
@@ -39,22 +36,23 @@ router.post('/api/menubar', (req, res) => {
             }
         }
     });
-    state_1.default.activeMenuBar.on('after-create-window', () => {
+    state_1.default.activeMenuBar.on("after-create-window", () => {
         require("@electron/remote/main").enable(state_1.default.activeMenuBar.window.webContents);
     });
-    state_1.default.activeMenuBar.on('ready', () => {
-        state_1.default.activeMenuBar.tray.setImage(electron_1.nativeImage.createEmpty());
-        state_1.default.activeMenuBar.on('show', () => {
-            (0, utils_1.notifyLaravel)('events', {
-                event: '\\Native\\Laravel\\Events\\MenuBar\\MenuBarClicked',
+    state_1.default.activeMenuBar.on("ready", () => {
+        state_1.default.activeMenuBar.on("show", () => {
+            (0, utils_1.notifyLaravel)("events", {
+                event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarClicked"
             });
         });
-        state_1.default.activeMenuBar.tray.on('right-click', () => {
-            state_1.default.activeMenuBar.tray.popUpContextMenu(electron_1.Menu.buildFromTemplate([
-                { role: 'quit' }
-            ]));
+        state_1.default.activeMenuBar.tray.on("right-click", () => {
+            let menu = electron_1.Menu.buildFromTemplate([{ role: "quit" }]);
+            if (contextMenu) {
+                const menuEntries = contextMenu.map(helper_1.mapMenu);
+                menu = electron_1.Menu.buildFromTemplate(menuEntries);
+            }
+            state_1.default.activeMenuBar.tray.popUpContextMenu(menu);
         });
-        console.log("menubar ready");
     });
 });
 exports.default = router;

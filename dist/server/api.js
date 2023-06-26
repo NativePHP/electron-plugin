@@ -20,11 +20,13 @@ const clipboard_1 = __importDefault(require("./api/clipboard"));
 const app_1 = __importDefault(require("./api/app"));
 const screen_1 = __importDefault(require("./api/screen"));
 const dialog_1 = __importDefault(require("./api/dialog"));
+const debug_1 = __importDefault(require("./api/debug"));
 const system_1 = __importDefault(require("./api/system"));
 const globalShortcut_1 = __importDefault(require("./api/globalShortcut"));
 const notification_1 = __importDefault(require("./api/notification"));
 const dock_1 = __importDefault(require("./api/dock"));
 const menu_1 = __importDefault(require("./api/menu"));
+const menuBar_1 = __importDefault(require("./api/menuBar"));
 const window_1 = __importDefault(require("./api/window"));
 const process_1 = __importDefault(require("./api/process"));
 const contextMenu_1 = __importDefault(require("./api/contextMenu"));
@@ -50,7 +52,11 @@ function startAPIServer(randomSecret) {
             httpServer.use("/api/window", window_1.default);
             httpServer.use("/api/process", process_1.default);
             httpServer.use("/api/context", contextMenu_1.default);
+            httpServer.use("/api/menu-bar", menuBar_1.default);
             httpServer.use("/api/progress-bar", progressBar_1.default);
+            if (process.env.NODE_ENV === "development") {
+                httpServer.use("/api/debug", debug_1.default);
+            }
             const server = httpServer.listen(port, () => {
                 resolve({
                     server,

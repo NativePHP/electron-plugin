@@ -33,7 +33,7 @@ router.post('/open', (req, res) => {
 });
 
 router.post('/save', (req, res) => {
-    const {title, buttonLabel, filters, properties, defaultPath, message} = req.body
+    const {title, buttonLabel, filters, properties, defaultPath, message, windowReference} = req.body
 
     let options = {
         title,
@@ -46,7 +46,14 @@ router.post('/save', (req, res) => {
 
     options = trimOptions(options);
 
-    const result = dialog.showSaveDialogSync(options)
+    let result;
+    let browserWindow = state.findWindow(windowReference);
+
+    if (browserWindow) {
+      result = dialog.showSaveDialogSync(browserWindow, options)
+    } else {
+      result = dialog.showSaveDialogSync(options)
+    }
 
     res.json({
         result

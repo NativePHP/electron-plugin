@@ -7,12 +7,13 @@ import clipboardRoutes from "./api/clipboard";
 import appRoutes from "./api/app";
 import screenRoutes from "./api/screen";
 import dialogRoutes from "./api/dialog";
+import debugRoutes from "./api/debug";
 import systemRoutes from "./api/system";
 import globalShortcutRoutes from "./api/globalShortcut";
 import notificationRoutes from "./api/notification";
 import dockRoutes from "./api/dock";
 import menuRoutes from "./api/menu";
-import menubarRoutes from "./api/menubar";
+import menuBarRoutes from "./api/menuBar";
 import windowRoutes from "./api/window";
 import processRoutes from "./api/process";
 import contextMenuRoutes from "./api/contextMenu";
@@ -45,7 +46,12 @@ async function startAPIServer(randomSecret: string): Promise<APIProcess> {
     httpServer.use("/api/window", windowRoutes);
     httpServer.use("/api/process", processRoutes);
     httpServer.use("/api/context", contextMenuRoutes);
+    httpServer.use("/api/menu-bar", menuBarRoutes);
     httpServer.use("/api/progress-bar", progressBarRoutes);
+
+    if (process.env.NODE_ENV === "development") {
+      httpServer.use("/api/debug", debugRoutes);
+    }
 
     const server = httpServer.listen(port, () => {
       resolve({
