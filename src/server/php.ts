@@ -83,7 +83,7 @@ function getAppPath() {
 }
 
 function ensureAppFoldersAreAvailable() {
-    if (! existsSync(storagePath)) {
+    if (! existsSync(storagePath) || process.env.NODE_ENV === 'development') {
         copySync(join(appPath, 'storage'), storagePath)
     }
 

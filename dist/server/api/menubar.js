@@ -15,9 +15,17 @@ router.post("/label", (req, res) => {
     const { label } = req.body;
     state_1.default.activeMenuBar.tray.setTitle(label);
 });
+router.post("/show", (req, res) => {
+    res.sendStatus(200);
+    state_1.default.activeMenuBar.showWindow();
+});
+router.post("/hide", (req, res) => {
+    res.sendStatus(200);
+    state_1.default.activeMenuBar.hideWindow();
+});
 router.post("/create", (req, res) => {
     res.sendStatus(200);
-    const { id, width, height, url, alwaysOnTop, vibrancy, backgroundColor, transparency, icon, showDockIcon, contextMenu } = req.body;
+    const { width, height, url, label, alwaysOnTop, vibrancy, backgroundColor, transparency, icon, showDockIcon, contextMenu } = req.body;
     state_1.default.activeMenuBar = (0, menubar_1.menubar)({
         icon: icon || state_1.default.icon.replace("icon.png", "IconTemplate.png"),
         index: url,
@@ -40,12 +48,21 @@ router.post("/create", (req, res) => {
         require("@electron/remote/main").enable(state_1.default.activeMenuBar.window.webContents);
     });
     state_1.default.activeMenuBar.on("ready", () => {
+        state_1.default.activeMenuBar.tray.setTitle(label);
+        state_1.default.activeMenuBar.on("hide", () => {
+            (0, utils_1.notifyLaravel)("events", {
+                event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarHidden"
+            });
+        });
         state_1.default.activeMenuBar.on("show", () => {
             (0, utils_1.notifyLaravel)("events", {
-                event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarClicked"
+                event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarShown"
             });
         });
         state_1.default.activeMenuBar.tray.on("right-click", () => {
+            (0, utils_1.notifyLaravel)("events", {
+                event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarContextMenuOpened"
+            });
             let menu = electron_1.Menu.buildFromTemplate([{ role: "quit" }]);
             if (contextMenu) {
                 const menuEntries = contextMenu.map(helper_1.mapMenu);

@@ -16,6 +16,12 @@ router.post('/resize', (req, res) => {
     (_a = state_1.default.windows[id]) === null || _a === void 0 ? void 0 : _a.setSize(parseInt(width), parseInt(height));
     res.sendStatus(200);
 });
+router.post('/position', (req, res) => {
+    var _a;
+    const { id, x, y, animate } = req.body;
+    (_a = state_1.default.windows[id]) === null || _a === void 0 ? void 0 : _a.setPosition(parseInt(x), parseInt(y), animate);
+    res.sendStatus(200);
+});
 router.post('/close', (req, res) => {
     const { id } = req.body;
     if (state_1.default.windows[id]) {
@@ -44,7 +50,7 @@ router.post('/always-on-top', (req, res) => {
     res.sendStatus(200);
 });
 router.post('/open', (req, res) => {
-    let { id, x, y, frame, width, height, minWidth, minHeight, focusable, hasShadow, url, resizable, title, alwaysOnTop, titleBarStyle, vibrancy, backgroundColor, transparency } = req.body;
+    let { id, x, y, frame, width, height, minWidth, minHeight, maxWidth, maxHeight, focusable, hasShadow, url, resizable, movable, minimizable, maximizable, closable, title, alwaysOnTop, titleBarStyle, vibrancy, backgroundColor, transparency } = req.body;
     if (state_1.default.windows[id]) {
         state_1.default.windows[id].show();
         state_1.default.windows[id].focus();
@@ -52,15 +58,19 @@ router.post('/open', (req, res) => {
     }
     let preloadPath = (0, path_1.join)(__dirname, '../../preload/index.js');
     let windowState = undefined;
-    if (req.body.manageState === true) {
+    if (req.body.rememberState === true) {
         windowState = (0, electron_window_state_1.default)({
             defaultHeight: parseInt(height),
             defaultWidth: parseInt(width),
         });
     }
-    const window = new electron_1.BrowserWindow(Object.assign(Object.assign({ width: (windowState === null || windowState === void 0 ? void 0 : windowState.width) || parseInt(width), height: (windowState === null || windowState === void 0 ? void 0 : windowState.height) || parseInt(height), frame: frame !== undefined ? frame : true, x: (windowState === null || windowState === void 0 ? void 0 : windowState.x) || x, y: (windowState === null || windowState === void 0 ? void 0 : windowState.y) || y, minWidth: minWidth, minHeight: minHeight, show: false, title,
+    const window = new electron_1.BrowserWindow(Object.assign(Object.assign({ width: (windowState === null || windowState === void 0 ? void 0 : windowState.width) || parseInt(width), height: (windowState === null || windowState === void 0 ? void 0 : windowState.height) || parseInt(height), frame: frame !== undefined ? frame : true, x: (windowState === null || windowState === void 0 ? void 0 : windowState.x) || x, y: (windowState === null || windowState === void 0 ? void 0 : windowState.y) || y, minWidth: minWidth, minHeight: minHeight, maxWidth: maxWidth, maxHeight: maxHeight, show: false, title,
         backgroundColor, transparent: transparency, alwaysOnTop,
         resizable,
+        movable,
+        minimizable,
+        maximizable,
+        closable,
         hasShadow,
         titleBarStyle,
         vibrancy,
@@ -76,7 +86,7 @@ router.post('/open', (req, res) => {
         window.webContents.openDevTools();
     }
     require("@electron/remote/main").enable(window.webContents);
-    if (req.body.manageState === true) {
+    if (req.body.rememberState === true) {
         windowState.manage(window);
     }
     window.on('blur', () => {
@@ -102,6 +112,12 @@ router.post('/open', (req, res) => {
     window.on('maximize', () => {
         (0, utils_1.notifyLaravel)('events', {
             event: 'Native\\Laravel\\Events\\Windows\\WindowMaximized',
+            payload: [id]
+        });
+    });
+    window.on('show', () => {
+        (0, utils_1.notifyLaravel)('events', {
+            event: 'Native\\Laravel\\Events\\Windows\\WindowShown',
             payload: [id]
         });
     });

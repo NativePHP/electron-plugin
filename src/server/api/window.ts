@@ -14,6 +14,15 @@ router.post('/resize', (req, res) => {
     res.sendStatus(200)
 })
 
+
+router.post('/position', (req, res) => {
+  const {id, x, y, animate} = req.body
+
+  state.windows[id]?.setPosition(parseInt(x), parseInt(y), animate)
+
+  res.sendStatus(200)
+})
+
 router.post('/close', (req, res) => {
     const {id} = req.body
 
@@ -57,10 +66,16 @@ router.post('/open', (req, res) => {
         height,
         minWidth,
         minHeight,
+        maxWidth,
+        maxHeight,
         focusable,
         hasShadow,
         url,
         resizable,
+        movable,
+        minimizable,
+        maximizable,
+        closable,
         title,
         alwaysOnTop,
         titleBarStyle,
@@ -79,7 +94,7 @@ router.post('/open', (req, res) => {
 
     let windowState: windowStateKeeper.State | undefined = undefined
 
-    if (req.body.manageState === true) {
+    if (req.body.rememberState === true) {
       windowState = windowStateKeeper({
         defaultHeight: parseInt(height),
         defaultWidth: parseInt(width),
@@ -94,12 +109,18 @@ router.post('/open', (req, res) => {
         y: windowState?.y || y,
         minWidth: minWidth,
         minHeight: minHeight,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
         show: false,
         title,
         backgroundColor,
         transparent: transparency,
         alwaysOnTop,
         resizable,
+        movable,
+        minimizable,
+        maximizable,
+        closable,
         hasShadow,
         titleBarStyle,
         vibrancy,
@@ -122,7 +143,7 @@ router.post('/open', (req, res) => {
 
     require("@electron/remote/main").enable(window.webContents)
 
-    if (req.body.manageState === true) {
+    if (req.body.rememberState === true) {
       windowState.manage(window)
     }
 
@@ -155,6 +176,13 @@ router.post('/open', (req, res) => {
         payload: [id]
       })
     })
+
+  window.on('show', () => {
+    notifyLaravel('events', {
+      event: 'Native\\Laravel\\Events\\Windows\\WindowShown',
+      payload: [id]
+    })
+  });
 
     window.on('resized', () => {
       notifyLaravel('events', {

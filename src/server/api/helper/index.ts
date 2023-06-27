@@ -49,6 +49,7 @@ const mapMenu = (menu) => {
 
     if (menu.type === 'role') {
         return {
+            label: menu.label,
             role: menu.role
         }
     }

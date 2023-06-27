@@ -16,14 +16,26 @@ router.post("/label", (req, res) => {
   state.activeMenuBar.tray.setTitle(label);
 });
 
+router.post("/show", (req, res) => {
+  res.sendStatus(200);
+
+  state.activeMenuBar.showWindow();
+});
+
+router.post("/hide", (req, res) => {
+  res.sendStatus(200);
+
+  state.activeMenuBar.hideWindow();
+});
+
 router.post("/create", (req, res) => {
   res.sendStatus(200);
 
   const {
-    id,
     width,
     height,
     url,
+    label,
     alwaysOnTop,
     vibrancy,
     backgroundColor,
@@ -51,17 +63,31 @@ router.post("/create", (req, res) => {
       }
     }
   });
+
+
   state.activeMenuBar.on("after-create-window", () => {
     require("@electron/remote/main").enable(state.activeMenuBar.window.webContents);
   });
+
   state.activeMenuBar.on("ready", () => {
+    state.activeMenuBar.tray.setTitle(label);
+
+    state.activeMenuBar.on("hide", () => {
+      notifyLaravel("events", {
+        event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarHidden"
+      });
+    });
     state.activeMenuBar.on("show", () => {
       notifyLaravel("events", {
-        event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarClicked"
+        event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarShown"
       });
     });
 
     state.activeMenuBar.tray.on("right-click", () => {
+      notifyLaravel("events", {
+        event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarContextMenuOpened"
+      })
+
       let menu = Menu.buildFromTemplate([{ role: "quit" }]);
 
       if (contextMenu) {

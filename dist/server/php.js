@@ -73,7 +73,7 @@ function getAppPath() {
 }
 exports.getAppPath = getAppPath;
 function ensureAppFoldersAreAvailable() {
-    if (!(0, fs_1.existsSync)(storagePath)) {
+    if (!(0, fs_1.existsSync)(storagePath) || process.env.NODE_ENV === 'development') {
         (0, fs_extra_1.copySync)((0, path_1.join)(appPath, 'storage'), storagePath);
     }
     (0, fs_1.mkdirSync)(databasePath, { recursive: true });
