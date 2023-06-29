@@ -8,7 +8,7 @@ settingsStore.onDidAnyChange((newValue, oldValue) => {
   const changedKey = Object.keys(newValue).find(key => newValue[key] !== oldValue[key]);
   if (changedKey) {
     notifyLaravel('events', {
-      event: '\\Native\\Laravel\\Events\\Settings\\SettingChanged',
+      event: 'Native\\Laravel\\Events\\Settings\\SettingChanged',
       payload: {
         key: changedKey,
         value: newValue[changedKey] || null
