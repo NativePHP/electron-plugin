@@ -30,6 +30,7 @@ const menuBar_1 = __importDefault(require("./api/menuBar"));
 const window_1 = __importDefault(require("./api/window"));
 const process_1 = __importDefault(require("./api/process"));
 const contextMenu_1 = __importDefault(require("./api/contextMenu"));
+const settings_1 = __importDefault(require("./api/settings"));
 const progressBar_1 = __importDefault(require("./api/progressBar"));
 function startAPIServer(randomSecret) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -51,6 +52,7 @@ function startAPIServer(randomSecret) {
             httpServer.use("/api/menu", menu_1.default);
             httpServer.use("/api/window", window_1.default);
             httpServer.use("/api/process", process_1.default);
+            httpServer.use("/api/settings", settings_1.default);
             httpServer.use("/api/context", contextMenu_1.default);
             httpServer.use("/api/menu-bar", menuBar_1.default);
             httpServer.use("/api/progress-bar", progressBar_1.default);

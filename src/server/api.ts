@@ -17,6 +17,7 @@ import menuBarRoutes from "./api/menuBar";
 import windowRoutes from "./api/window";
 import processRoutes from "./api/process";
 import contextMenuRoutes from "./api/contextMenu";
+import settingsRoutes from "./api/settings";
 import progressBarRoutes from "./api/progressBar";
 import { Server } from "net";
 
@@ -45,6 +46,7 @@ async function startAPIServer(randomSecret: string): Promise<APIProcess> {
     httpServer.use("/api/menu", menuRoutes);
     httpServer.use("/api/window", windowRoutes);
     httpServer.use("/api/process", processRoutes);
+    httpServer.use("/api/settings", settingsRoutes);
     httpServer.use("/api/context", contextMenuRoutes);
     httpServer.use("/api/menu-bar", menuBarRoutes);
     httpServer.use("/api/progress-bar", progressBarRoutes);

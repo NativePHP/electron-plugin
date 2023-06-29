@@ -1,4 +1,21 @@
 import { BrowserWindow } from "electron";
+import Store from 'electron-store';
+import { notifyLaravel } from "./utils";
+
+const settingsStore = new Store();
+settingsStore.onDidAnyChange((newValue, oldValue) => {
+  // Only notify of the changed key/value pair
+  const changedKey = Object.keys(newValue).find(key => newValue[key] !== oldValue[key]);
+  if (changedKey) {
+    notifyLaravel('events', {
+      event: '\\Native\\Laravel\\Events\\Settings\\SettingChanged',
+      payload: {
+        key: changedKey,
+        value: newValue[changedKey] || null
+      }
+    });
+  }
+})
 
 interface State {
   activeMenuBar: any;
@@ -8,6 +25,7 @@ interface State {
   icon: string | null
   windows: Record<string, BrowserWindow>
   randomSecret: string,
+  store: Store,
   findWindow: (id: string) => BrowserWindow | null
 }
 
@@ -30,6 +48,7 @@ export default {
     phpPort: null,
     caCert: null,
     icon: null,
+    store: settingsStore,
     randomSecret: generateRandomString(32),
     windows: {},
     findWindow(id: string) {
