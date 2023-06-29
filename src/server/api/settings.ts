@@ -8,9 +8,9 @@ router.get('/:key', (req, res) => {
   const key = req.params.key;
   const defaultValue = req.query.default;
 
-  state.store.get(key, defaultValue);
+  const value = state.store.get(key, defaultValue);
 
-  res.sendStatus(200)
+  res.json({value});
 });
 
 router.post('/:key', (req, res) => {

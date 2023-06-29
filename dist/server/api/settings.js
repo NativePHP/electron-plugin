@@ -9,8 +9,8 @@ const router = express_1.default.Router();
 router.get('/:key', (req, res) => {
     const key = req.params.key;
     const defaultValue = req.query.default;
-    state_1.default.store.get(key, defaultValue);
-    res.sendStatus(200);
+    const value = state_1.default.store.get(key, defaultValue);
+    res.json({ value });
 });
 router.post('/:key', (req, res) => {
     const key = req.params.key;
