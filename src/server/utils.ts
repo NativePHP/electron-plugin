@@ -25,6 +25,12 @@ export async function notifyLaravel(endpoint: string, payload = {}) {
   } catch (e) {
     //
   }
+
+  if (endpoint === 'events') {
+    Object.values(state.windows).forEach(window => {
+      window.webContents.send('native-event', payload);
+    })
+  }
 }
 
 /**

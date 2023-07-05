@@ -38,6 +38,11 @@ function notifyLaravel(endpoint, payload = {}) {
         }
         catch (e) {
         }
+        if (endpoint === 'events') {
+            Object.values(state_1.default.windows).forEach(window => {
+                window.webContents.send('native-event', payload);
+            });
+        }
     });
 }
 exports.notifyLaravel = notifyLaravel;
