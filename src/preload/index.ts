@@ -19,6 +19,10 @@ ipcRenderer.on('native-event', (event, payload) => {
   if (typeof Echo === 'undefined') {
     return;
   }
-  // @ts-ignore
-  Echo['channel']('nativephp').whisper(payload.event, payload.payload);
+  try {
+    // @ts-ignore
+    Echo['private']('nativephp').whisper(payload.event, payload.payload);
+  } catch (_e) {
+    // ignore
+  }
 });

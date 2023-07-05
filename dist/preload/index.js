@@ -41,5 +41,9 @@ electron_1.ipcRenderer.on('native-event', (event, payload) => {
     if (typeof Echo === 'undefined') {
         return;
     }
-    Echo['channel']('nativephp').whisper(payload.event, payload.payload);
+    try {
+        Echo['private']('nativephp').whisper(payload.event, payload.payload);
+    }
+    catch (_e) {
+    }
 });
