@@ -37,13 +37,3 @@ electron_1.ipcRenderer.on('log', (event, { level, message, context }) => {
         console.log(`[${level}] ${message}`, context);
     }
 });
-electron_1.ipcRenderer.on('native-event', (event, payload) => {
-    if (typeof Echo === 'undefined') {
-        return;
-    }
-    try {
-        Echo['private']('nativephp').whisper(payload.event, payload.payload);
-    }
-    catch (_e) {
-    }
-});

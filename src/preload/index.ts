@@ -13,16 +13,3 @@ ipcRenderer.on('log', (event, {level, message, context}) => {
       console.log(`[${level}] ${message}`, context)
     }
 });
-
-ipcRenderer.on('native-event', (event, payload) => {
-  // @ts-ignore
-  if (typeof Echo === 'undefined') {
-    return;
-  }
-  try {
-    // @ts-ignore
-    Echo['private']('nativephp').whisper(payload.event, payload.payload);
-  } catch (_e) {
-    // ignore
-  }
-});
