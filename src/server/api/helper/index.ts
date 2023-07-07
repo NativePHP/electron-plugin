@@ -48,10 +48,15 @@ const mapMenu = (menu) => {
     }
 
     if (menu.type === 'role') {
-        return {
-            label: menu.label,
-            role: menu.role
+        let menuItem = {
+          role: menu.role
+        };
+
+        if (menu.label) {
+          menuItem['label'] = menu.label;
         }
+
+        return menuItem;
     }
 
     if (! menu.click) {
