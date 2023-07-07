@@ -6,9 +6,8 @@ const router = express.Router();
 
 router.get('/:key', (req, res) => {
   const key = req.params.key;
-  const defaultValue = req.query.default;
 
-  const value = state.store.get(key, defaultValue);
+  const value = state.store.get(key, null);
 
   res.json({value});
 });

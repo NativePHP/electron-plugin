@@ -8,8 +8,7 @@ const state_1 = __importDefault(require("../state"));
 const router = express_1.default.Router();
 router.get('/:key', (req, res) => {
     const key = req.params.key;
-    const defaultValue = req.query.default;
-    const value = state_1.default.store.get(key, defaultValue);
+    const value = state_1.default.store.get(key, null);
     res.json({ value });
 });
 router.post('/:key', (req, res) => {
