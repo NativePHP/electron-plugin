@@ -37,3 +37,24 @@ electron_1.ipcRenderer.on('log', (event, { level, message, context }) => {
         console.log(`[${level}] ${message}`, context);
     }
 });
+electron_1.ipcRenderer.on('native-event', (event, data) => {
+    if (!window.livewire) {
+        return;
+    }
+    window.livewire.components.components().forEach(component => {
+        if (Array.isArray(component.listeners)) {
+            component.listeners.forEach(event => {
+                if (event.startsWith('native')) {
+                    let event_parts = event.split(/(native:|native-)|:|,/);
+                    if (event_parts[1] == 'native:') {
+                        event_parts.splice(2, 0, 'private', undefined, 'nativephp', undefined);
+                    }
+                    let [s1, signature, channel_type, s2, channel, s3, event_name,] = event_parts;
+                    if (data.event === event_name) {
+                        window.livewire.emit(event, data.payload);
+                    }
+                }
+            });
+        }
+    });
+});
