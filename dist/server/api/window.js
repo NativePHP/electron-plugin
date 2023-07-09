@@ -50,7 +50,7 @@ router.post('/always-on-top', (req, res) => {
     res.sendStatus(200);
 });
 router.post('/open', (req, res) => {
-    let { id, x, y, frame, width, height, minWidth, minHeight, maxWidth, maxHeight, focusable, hasShadow, url, resizable, movable, minimizable, maximizable, closable, title, alwaysOnTop, titleBarStyle, vibrancy, backgroundColor, transparency } = req.body;
+    let { id, x, y, frame, width, height, minWidth, minHeight, maxWidth, maxHeight, focusable, hasShadow, url, resizable, movable, minimizable, maximizable, closable, title, alwaysOnTop, titleBarStyle, vibrancy, backgroundColor, transparency, showDevTools, } = req.body;
     if (state_1.default.windows[id]) {
         state_1.default.windows[id].show();
         state_1.default.windows[id].focus();
@@ -82,7 +82,7 @@ router.post('/open', (req, res) => {
             contextIsolation: false,
             nodeIntegration: true,
         } }));
-    if (process.env.NODE_ENV === 'development') {
+    if ((process.env.NODE_ENV === 'development' || showDevTools === true) && showDevTools !== false) {
         window.webContents.openDevTools();
     }
     require("@electron/remote/main").enable(window.webContents);

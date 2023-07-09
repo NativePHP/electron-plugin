@@ -81,7 +81,8 @@ router.post('/open', (req, res) => {
         titleBarStyle,
         vibrancy,
         backgroundColor,
-        transparency
+        transparency,
+        showDevTools,
     } = req.body
 
     if (state.windows[id]) {
@@ -137,7 +138,7 @@ router.post('/open', (req, res) => {
         }
     })
 
-  if (process.env.NODE_ENV === 'development') {
+  if ((process.env.NODE_ENV === 'development' || showDevTools === true) && showDevTools !== false) {
     window.webContents.openDevTools();
   }
 
