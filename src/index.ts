@@ -1,12 +1,13 @@
+import { BrowserWindow, app } from "electron";
+import {electronApp, is, optimizer} from '@electron-toolkit/utils'
+import {retrieveNativePHPConfig, runScheduler, servePhpApp, serveWebsockets, startAPI} from './server'
+
 import type CrossProcessExports from 'electron'
 import { autoUpdater } from "electron-updater"
-import state from './server/state'
-import {electronApp, optimizer, is} from '@electron-toolkit/utils'
-import {startAPI, runScheduler, servePhpApp, serveWebsockets, retrieveNativePHPConfig} from './server'
 import {notifyLaravel} from "./server/utils";
-import { app, BrowserWindow } from "electron";
-import { resolve } from "path";
 import ps from 'ps-node'
+import { resolve } from "path";
+import state from './server/state'
 
 let phpProcesses = [];
 let websocketProcess;
@@ -77,6 +78,10 @@ class NativePHP {
   private bootstrapApp(app: Electron.CrossProcessExports.App) {
     app.whenReady().then(async () => {
 
+	    console.log('NativePHP bootstrap - Checking for Platform/Architecture...');
+      console.log('Platform:', process.platform);
+      console.log('Architecture:', process.arch);
+      
       if (process.env.NODE_ENV === 'development') {
         app.dock.setIcon(state.icon)
       }
