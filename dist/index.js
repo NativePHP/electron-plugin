@@ -11,13 +11,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-const electron_updater_1 = require("electron-updater");
-const state_1 = __importDefault(require("./server/state"));
 const utils_1 = require("@electron-toolkit/utils");
 const server_1 = require("./server");
+const electron_updater_1 = require("electron-updater");
 const utils_2 = require("./server/utils");
-const path_1 = require("path");
 const ps_node_1 = __importDefault(require("ps-node"));
+const path_1 = require("path");
+const state_1 = __importDefault(require("./server/state"));
 let phpProcesses = [];
 let websocketProcess;
 let schedulerInterval;
@@ -75,8 +75,10 @@ class NativePHP {
     bootstrapApp(app) {
         app.whenReady().then(() => __awaiter(this, void 0, void 0, function* () {
             var _a;
+            console.log('NativePHP bootstrap - Checking for Platform/Architecture...');
+            console.log('Platform:', process.platform);
+            console.log('Architecture:', process.arch);
             if (process.env.NODE_ENV === 'development') {
-                app.dock.setIcon(state_1.default.icon);
             }
             app.on('browser-window-created', (_, window) => {
                 utils_1.optimizer.watchWindowShortcuts(window);
