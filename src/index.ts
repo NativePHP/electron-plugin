@@ -83,7 +83,7 @@ class NativePHP {
       console.log('Architecture:', process.arch);
       
       if (process.env.NODE_ENV === 'development') {
-        app.dock.setIcon(state.icon)
+        // app.dock.setIcon(state.icon) // TODO: Fix this
       }
 
       // Default open or close DevTools by F12 in development
