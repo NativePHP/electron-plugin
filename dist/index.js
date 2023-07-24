@@ -75,9 +75,6 @@ class NativePHP {
     bootstrapApp(app) {
         app.whenReady().then(() => __awaiter(this, void 0, void 0, function* () {
             var _a;
-            console.log('NativePHP bootstrap - Checking for Platform/Architecture...');
-            console.log('Platform:', process.platform);
-            console.log('Architecture:', process.arch);
             if (process.env.NODE_ENV === 'development') {
                 if (process.platform === 'darwin') {
                     app.dock.setIcon(state_1.default.icon);
