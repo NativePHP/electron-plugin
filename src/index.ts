@@ -1,13 +1,12 @@
-import { BrowserWindow, app } from "electron";
-import {electronApp, is, optimizer} from '@electron-toolkit/utils'
-import {retrieveNativePHPConfig, runScheduler, servePhpApp, serveWebsockets, startAPI} from './server'
-
 import type CrossProcessExports from 'electron'
 import { autoUpdater } from "electron-updater"
-import {notifyLaravel} from "./server/utils";
-import ps from 'ps-node'
+import state from './server/state';
+import {electronApp, is, optimizer} from '@electron-toolkit/utils'
 import { resolve } from "path";
-import state from './server/state'
+import {retrieveNativePHPConfig, runScheduler, servePhpApp, serveWebsockets, startAPI} from './server'
+import {notifyLaravel} from "./server/utils";
+import { BrowserWindow, app } from "electron";
+import ps from 'ps-node'
 
 let phpProcesses = [];
 let websocketProcess;
