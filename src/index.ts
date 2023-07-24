@@ -77,7 +77,7 @@ class NativePHP {
   private bootstrapApp(app: Electron.CrossProcessExports.App) {
     app.whenReady().then(async () => {
 
-	    console.log('NativePHP bootstrap - Checking for Platform/Architecture...');
+	  console.log('NativePHP bootstrap - Checking for Platform/Architecture...');
       console.log('Platform:', process.platform);
       console.log('Architecture:', process.arch);
       
@@ -85,7 +85,7 @@ class NativePHP {
 		if (process.platform === 'darwin') {
         	app.dock.setIcon(state.icon)
       	}
-	}
+	  }
 
       // Default open or close DevTools by F12 in development
       // and ignore CommandOrControl + R in production.
