@@ -77,9 +77,9 @@ class NativePHP {
   private bootstrapApp(app: Electron.CrossProcessExports.App) {
     app.whenReady().then(async () => {
 
-	  console.log('NativePHP bootstrap - Checking for Platform/Architecture...');
-      console.log('Platform:', process.platform);
-      console.log('Architecture:', process.arch);
+	//   console.log('NativePHP bootstrap - Checking for Platform/Architecture...');
+    //   console.log('Platform:', process.platform);
+    //   console.log('Architecture:', process.arch);
       
       if (process.env.NODE_ENV === 'development') {
 		if (process.platform === 'darwin') {
