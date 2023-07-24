@@ -2,10 +2,10 @@ import type CrossProcessExports from 'electron'
 import { autoUpdater } from "electron-updater"
 import state from './server/state'
 import {electronApp, optimizer, is} from '@electron-toolkit/utils'
-import { resolve } from "path";
 import {startAPI, runScheduler, servePhpApp, serveWebsockets, retrieveNativePHPConfig} from './server'
 import {notifyLaravel} from "./server/utils";
 import { app, BrowserWindow } from "electron";
+import { resolve } from "path";
 import ps from 'ps-node'
 
 let phpProcesses = [];
@@ -82,8 +82,10 @@ class NativePHP {
       console.log('Architecture:', process.arch);
       
       if (process.env.NODE_ENV === 'development') {
-        // app.dock.setIcon(state.icon) // TODO: Fix this
-      }
+		if (process.platform === 'darwin') {
+        	app.dock.setIcon(state.icon)
+      	}
+	}
 
       // Default open or close DevTools by F12 in development
       // and ignore CommandOrControl + R in production.
