@@ -77,7 +77,8 @@ class NativePHP {
   private bootstrapApp(app: Electron.CrossProcessExports.App) {
     app.whenReady().then(async () => {
 
-      if (process.env.NODE_ENV === 'development') {
+      // Only run this on macOS
+      if (process.platform === 'darwin' && process.env.NODE_ENV === 'development') {
         app.dock.setIcon(state.icon)
       }
 

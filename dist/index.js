@@ -75,7 +75,7 @@ class NativePHP {
     bootstrapApp(app) {
         app.whenReady().then(() => __awaiter(this, void 0, void 0, function* () {
             var _a;
-            if (process.env.NODE_ENV === 'development') {
+            if (process.platform === 'darwin' && process.env.NODE_ENV === 'development') {
                 app.dock.setIcon(state_1.default.icon);
             }
             app.on('browser-window-created', (_, window) => {
