@@ -10,6 +10,12 @@ const path_1 = require("path");
 const utils_1 = require("../utils");
 const router = express_1.default.Router();
 const electron_window_state_1 = __importDefault(require("electron-window-state"));
+router.post('/maximize', (req, res) => {
+    var _a;
+    const { id } = req.body;
+    (_a = state_1.default.windows[id]) === null || _a === void 0 ? void 0 : _a.maximize();
+    res.sendStatus(200);
+});
 router.post('/resize', (req, res) => {
     var _a;
     const { id, width, height } = req.body;
@@ -50,7 +56,7 @@ router.post('/always-on-top', (req, res) => {
     res.sendStatus(200);
 });
 router.post('/open', (req, res) => {
-    let { id, x, y, frame, width, height, minWidth, minHeight, maxWidth, maxHeight, focusable, hasShadow, url, resizable, movable, minimizable, maximizable, closable, title, alwaysOnTop, titleBarStyle, vibrancy, backgroundColor, transparency, showDevTools, } = req.body;
+    let { id, x, y, frame, width, height, minWidth, minHeight, maxWidth, maxHeight, focusable, hasShadow, url, resizable, movable, minimizable, maximizable, closable, title, alwaysOnTop, titleBarStyle, vibrancy, backgroundColor, transparency, showDevTools, fullscreen, kiosk, } = req.body;
     if (state_1.default.windows[id]) {
         state_1.default.windows[id].show();
         state_1.default.windows[id].focus();
@@ -81,7 +87,8 @@ router.post('/open', (req, res) => {
             sandbox: false,
             contextIsolation: false,
             nodeIntegration: true,
-        } }));
+        }, fullscreen,
+        kiosk }));
     if ((process.env.NODE_ENV === 'development' || showDevTools === true) && showDevTools !== false) {
         window.webContents.openDevTools();
     }
