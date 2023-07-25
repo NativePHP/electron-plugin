@@ -30,6 +30,7 @@ router.post("/create", (req, res) => {
         icon: icon || state_1.default.icon.replace("icon.png", "IconTemplate.png"),
         index: url,
         showDockIcon,
+        showOnAllWorkspaces: false,
         browserWindow: {
             width,
             height,
