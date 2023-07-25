@@ -83,6 +83,8 @@ router.post('/open', (req, res) => {
         backgroundColor,
         transparency,
         showDevTools,
+        fullscreen,
+        kiosk,
     } = req.body
 
     if (state.windows[id]) {
@@ -135,7 +137,9 @@ router.post('/open', (req, res) => {
             sandbox: false,
             contextIsolation: false,
             nodeIntegration: true,
-        }
+        },
+        fullscreen,
+        kiosk,
     })
 
   if ((process.env.NODE_ENV === 'development' || showDevTools === true) && showDevTools !== false) {
