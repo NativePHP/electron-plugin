@@ -1,17 +1,23 @@
-import { spawn } from 'child_process'
-import { getAppPath } from './php'
-import state from './state'
+import { existsSync } from "fs";
+import { join } from "path";
+import { spawn } from "child_process";
+import { getAppPath } from "./php";
+import state from "./state";
 
 function serveWebsockets() {
-  const phpServer = spawn(state.php, ['artisan', 'websockets:serve'], {
-    cwd: getAppPath(),
-  })
+  if (!existsSync(join(getAppPath(), 'vendor', 'beyondcode', 'laravel-websockets'))) {
+    return;
+  }
 
-  phpServer.stdout.on('data', (data) => {
-  })
+  const phpServer = spawn(state.php, ["artisan", "websockets:serve"], {
+    cwd: getAppPath()
+  });
 
-  phpServer.stderr.on('data', (data) => {
-  })
+  phpServer.stdout.on("data", (data) => {
+  });
+
+  phpServer.stderr.on("data", (data) => {
+  });
   return phpServer;
 }
 

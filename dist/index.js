@@ -25,7 +25,7 @@ const killChildProcesses = () => {
     let processes = [
         ...phpProcesses,
         websocketProcess,
-    ];
+    ].filter((p) => p !== undefined);
     processes.forEach((process) => {
         try {
             ps_node_1.default.kill(process.pid);

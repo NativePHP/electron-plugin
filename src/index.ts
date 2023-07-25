@@ -17,7 +17,7 @@ const killChildProcesses = () => {
   let processes = [
     ...phpProcesses,
     websocketProcess,
-  ];
+  ].filter((p) => p !== undefined);
 
   processes.forEach((process) => {
     try {
