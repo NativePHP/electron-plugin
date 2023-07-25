@@ -167,12 +167,15 @@ function serveApp(secret, apiPort): Promise<ProcessResult> {
         callPhp(['artisan', 'storage:link', '--force'], phpOptions)
 
         // Migrate the database
-        if (store.get('migrated_version') !== app.getVersion() || process.env.NODE_ENV === 'development') {
+        if (store.get('migrated_version') !== app.getVersion() && process.env.NODE_ENV !== 'development') {
             console.log('Migrating database...')
             callPhp(['artisan', 'migrate', '--force'], phpOptions)
             store.set('migrated_version', app.getVersion())
-        } else {
-            console.log('Database already migrated', store.get('migrated_version'))
+        }
+
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Skipping Database migration while in development.')
+            console.log('You may migrate manually by running: php artisan native:migrate')
         }
 
         const phpPort = await getPhpPort();
