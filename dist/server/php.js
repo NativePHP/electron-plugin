@@ -139,13 +139,14 @@ function serveApp(secret, apiPort) {
         };
         const store = new electron_store_1.default();
         callPhp(['artisan', 'storage:link', '--force'], phpOptions);
-        if (store.get('migrated_version') !== electron_1.app.getVersion() || process.env.NODE_ENV === 'development') {
+        if (store.get('migrated_version') !== electron_1.app.getVersion() && process.env.NODE_ENV !== 'development') {
             console.log('Migrating database...');
             callPhp(['artisan', 'migrate', '--force'], phpOptions);
             store.set('migrated_version', electron_1.app.getVersion());
         }
-        else {
-            console.log('Database already migrated', store.get('migrated_version'));
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Skipping Database migration while in development.');
+            console.log('You may migrate manually by running: php artisan native:migrate');
         }
         const phpPort = yield getPhpPort();
         const serverPath = (0, path_1.join)(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
