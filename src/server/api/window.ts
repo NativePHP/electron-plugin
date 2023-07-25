@@ -6,6 +6,13 @@ import {notifyLaravel} from "../utils";
 const router = express.Router();
 import windowStateKeeper from "electron-window-state";
 
+router.post('/maximize', (req, res) => {
+    const {id} = req.body
+    state.windows[id]?.maximize()
+
+    res.sendStatus(200)
+});
+
 router.post('/resize', (req, res) => {
     const {id, width, height} = req.body
 
