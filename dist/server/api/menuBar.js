@@ -25,29 +25,46 @@ router.post("/hide", (req, res) => {
 });
 router.post("/create", (req, res) => {
     res.sendStatus(200);
-    const { width, height, url, label, alwaysOnTop, vibrancy, backgroundColor, transparency, icon, showDockIcon, contextMenu } = req.body;
-    state_1.default.activeMenuBar = (0, menubar_1.menubar)({
-        icon: icon || state_1.default.icon.replace("icon.png", "IconTemplate.png"),
-        index: url,
-        showDockIcon,
-        showOnAllWorkspaces: false,
-        browserWindow: {
-            width,
-            height,
-            alwaysOnTop,
-            vibrancy,
-            backgroundColor,
-            transparent: transparency,
-            webPreferences: {
-                nodeIntegration: true,
-                sandbox: false,
-                contextIsolation: false
+    const { width, height, url, label, alwaysOnTop, vibrancy, backgroundColor, transparency, icon, showDockIcon, onlyShowContextWindow, contextMenu } = req.body;
+    if (onlyShowContextWindow === true) {
+        const tray = new electron_1.Tray(icon || state_1.default.icon.replace("icon.png", "IconTemplate.png"));
+        tray.setContextMenu(buildMenu(contextMenu));
+        state_1.default.activeMenuBar = (0, menubar_1.menubar)({
+            tray,
+            index: false,
+            showDockIcon,
+            showOnAllWorkspaces: false,
+            browserWindow: {
+                show: false,
+                width: 0,
+                height: 0,
             }
-        }
-    });
-    state_1.default.activeMenuBar.on("after-create-window", () => {
-        require("@electron/remote/main").enable(state_1.default.activeMenuBar.window.webContents);
-    });
+        });
+    }
+    else {
+        state_1.default.activeMenuBar = (0, menubar_1.menubar)({
+            icon: icon || state_1.default.icon.replace("icon.png", "IconTemplate.png"),
+            index: url,
+            showDockIcon,
+            showOnAllWorkspaces: false,
+            browserWindow: {
+                width,
+                height,
+                alwaysOnTop,
+                vibrancy,
+                backgroundColor,
+                transparent: transparency,
+                webPreferences: {
+                    nodeIntegration: true,
+                    sandbox: false,
+                    contextIsolation: false
+                }
+            }
+        });
+        state_1.default.activeMenuBar.on("after-create-window", () => {
+            require("@electron/remote/main").enable(state_1.default.activeMenuBar.window.webContents);
+        });
+    }
     state_1.default.activeMenuBar.on("ready", () => {
         state_1.default.activeMenuBar.tray.setTitle(label);
         state_1.default.activeMenuBar.on("hide", () => {
@@ -60,17 +77,22 @@ router.post("/create", (req, res) => {
                 event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarShown"
             });
         });
-        state_1.default.activeMenuBar.tray.on("right-click", () => {
-            (0, utils_1.notifyLaravel)("events", {
-                event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarContextMenuOpened"
+        if (onlyShowContextWindow !== true) {
+            state_1.default.activeMenuBar.tray.on("right-click", () => {
+                (0, utils_1.notifyLaravel)("events", {
+                    event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarContextMenuOpened"
+                });
+                state_1.default.activeMenuBar.tray.popUpContextMenu(buildMenu(contextMenu));
             });
-            let menu = electron_1.Menu.buildFromTemplate([{ role: "quit" }]);
-            if (contextMenu) {
-                const menuEntries = contextMenu.map(helper_1.mapMenu);
-                menu = electron_1.Menu.buildFromTemplate(menuEntries);
-            }
-            state_1.default.activeMenuBar.tray.popUpContextMenu(menu);
-        });
+        }
     });
 });
+function buildMenu(contextMenu) {
+    let menu = electron_1.Menu.buildFromTemplate([{ role: "quit" }]);
+    if (contextMenu) {
+        const menuEntries = contextMenu.map(helper_1.mapMenu);
+        menu = electron_1.Menu.buildFromTemplate(menuEntries);
+    }
+    return menu;
+}
 exports.default = router;
