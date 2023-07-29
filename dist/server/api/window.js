@@ -56,7 +56,7 @@ router.post('/always-on-top', (req, res) => {
     res.sendStatus(200);
 });
 router.post('/open', (req, res) => {
-    let { id, x, y, frame, width, height, minWidth, minHeight, maxWidth, maxHeight, focusable, hasShadow, url, resizable, movable, minimizable, maximizable, closable, title, alwaysOnTop, titleBarStyle, vibrancy, backgroundColor, transparency, showDevTools, fullscreen, kiosk, } = req.body;
+    let { id, x, y, frame, width, height, minWidth, minHeight, maxWidth, maxHeight, focusable, hasShadow, url, resizable, movable, minimizable, maximizable, closable, title, alwaysOnTop, titleBarStyle, vibrancy, backgroundColor, transparency, showDevTools, fullscreen, kiosk, autoHideMenuBar, } = req.body;
     if (state_1.default.windows[id]) {
         state_1.default.windows[id].show();
         state_1.default.windows[id].focus();
@@ -80,7 +80,8 @@ router.post('/open', (req, res) => {
         hasShadow,
         titleBarStyle,
         vibrancy,
-        focusable, autoHideMenuBar: true }, (process.platform === 'linux' ? { icon: state_1.default.icon } : {})), { webPreferences: {
+        focusable,
+        autoHideMenuBar }, (process.platform === 'linux' ? { icon: state_1.default.icon } : {})), { webPreferences: {
             backgroundThrottling: false,
             spellcheck: false,
             preload: preloadPath,
