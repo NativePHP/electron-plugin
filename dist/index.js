@@ -109,10 +109,14 @@ class NativePHP {
             if (((_a = nativePHPConfig === null || nativePHPConfig === void 0 ? void 0 : nativePHPConfig.updater) === null || _a === void 0 ? void 0 : _a.enabled) === true) {
                 electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
             }
-            schedulerInterval = setInterval(() => {
-                console.log("Running scheduler...");
-                (0, server_1.runScheduler)(apiPort.port);
-            }, 60 * 1000);
+            let now = new Date();
+            let delay = (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
+            setTimeout(() => {
+                schedulerInterval = setInterval(() => {
+                    console.log("Running scheduler...");
+                    (0, server_1.runScheduler)(apiPort.port);
+                }, 60 * 1000);
+            }, delay);
             app.on('activate', function (event, hasVisibleWindows) {
                 if (!hasVisibleWindows) {
                     (0, utils_2.notifyLaravel)('booted');

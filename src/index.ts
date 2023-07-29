@@ -127,10 +127,15 @@ class NativePHP {
         autoUpdater.checkForUpdatesAndNotify()
       }
 
-      schedulerInterval = setInterval(() => {
-        console.log("Running scheduler...")
-        runScheduler(apiPort.port);
-      }, 60 * 1000);
+      let now = new Date();
+      let delay = (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
+
+      setTimeout(() => {
+        schedulerInterval = setInterval(() => {
+          console.log("Running scheduler...")
+          runScheduler(apiPort.port);
+        }, 60 * 1000);
+      }, delay);
 
       app.on('activate', function (event, hasVisibleWindows) {
         // On macOS it's common to re-create a window in the app when the
