@@ -107,6 +107,7 @@ router.post('/open', (req, res) => {
 
     if (req.body.rememberState === true) {
       windowState = windowStateKeeper({
+        file: `window-state-${id}.json`,
         defaultHeight: parseInt(height),
         defaultWidth: parseInt(width),
       })

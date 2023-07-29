@@ -66,6 +66,7 @@ router.post('/open', (req, res) => {
     let windowState = undefined;
     if (req.body.rememberState === true) {
         windowState = (0, electron_window_state_1.default)({
+            file: `window-state-${id}.json`,
             defaultHeight: parseInt(height),
             defaultWidth: parseInt(width),
         });
