@@ -92,6 +92,7 @@ router.post('/open', (req, res) => {
         showDevTools,
         fullscreen,
         kiosk,
+        autoHideMenuBar,
     } = req.body
 
     if (state.windows[id]) {
@@ -135,7 +136,7 @@ router.post('/open', (req, res) => {
         titleBarStyle,
         vibrancy,
         focusable,
-        autoHideMenuBar: true,
+        autoHideMenuBar,
         ...(process.platform === 'linux' ? {icon: state.icon} : {}),
         webPreferences: {
             backgroundThrottling: false,
