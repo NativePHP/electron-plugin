@@ -30,6 +30,7 @@ const appPath = getAppPath();
 function getPhpPort() {
     return __awaiter(this, void 0, void 0, function* () {
         return yield (0, get_port_1.default)({
+            host: '127.0.0.1',
             port: get_port_1.default.makeRange(8100, 9000)
         });
     });

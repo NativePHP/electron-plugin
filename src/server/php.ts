@@ -17,6 +17,7 @@ const appPath = getAppPath();
 
 async function getPhpPort() {
     return await getPort({
+        host: '127.0.0.1',
         port: getPort.makeRange(8100, 9000)
     });
 }
