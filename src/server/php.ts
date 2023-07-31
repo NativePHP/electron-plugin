@@ -137,15 +137,7 @@ function startQueueWorker(secret, apiPort, phpIniSettings = {}) {
 }
 
 function startScheduler(secret, apiPort, phpIniSettings = {}) {
-    const env = {
-        APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
-        APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
-        NATIVEPHP_STORAGE_PATH: storagePath,
-        NATIVEPHP_DATABASE_PATH: databaseFile,
-        NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
-        NATIVEPHP_RUNNING: true,
-        NATIVEPHP_SECRET: secret
-    };
+    const env = getDefaultEnvironmentVariables(secret, apiPort);
 
     const phpOptions = {
         cwd: appPath,
@@ -153,6 +145,37 @@ function startScheduler(secret, apiPort, phpIniSettings = {}) {
     };
 
     return callPhp(['artisan', 'schedule:run'], phpOptions, phpIniSettings);
+}
+
+function getPath(name: string) {
+  try {
+    // @ts-ignore
+    return app.getPath(name);
+  } catch (error) {
+    return '';
+  }
+}
+
+function getDefaultEnvironmentVariables(secret, apiPort) {
+  return {
+    APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
+    APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
+    NATIVEPHP_STORAGE_PATH: storagePath,
+    NATIVEPHP_DATABASE_PATH: databaseFile,
+    NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
+    NATIVEPHP_RUNNING: true,
+    NATIVEPHP_SECRET: secret,
+    NATIVEPHP_USER_HOME_PATH: getPath('home'),
+    NATIVEPHP_APP_DATA_PATH: getPath('appData'),
+    NATIVEPHP_USER_DATA_PATH: getPath('userData'),
+    NATIVEPHP_DESKTOP_PATH: getPath('desktop'),
+    NATIVEPHP_DOCUMENTS_PATH: getPath('documents'),
+    NATIVEPHP_DOWNLOADS_PATH: getPath('downloads'),
+    NATIVEPHP_MUSIC_PATH: getPath('music'),
+    NATIVEPHP_PICTURES_PATH: getPath('pictures'),
+    NATIVEPHP_VIDEOS_PATH: getPath('videos'),
+    NATIVEPHP_RECENT_PATH: getPath('recent'),
+  };
 }
 
 function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
@@ -165,15 +188,7 @@ function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
 
         console.log('Making sure app folders are available')
 
-        const env = {
-            APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
-            APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
-            NATIVEPHP_STORAGE_PATH: storagePath,
-            NATIVEPHP_DATABASE_PATH: databaseFile,
-            NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
-            NATIVEPHP_RUNNING: true,
-            NATIVEPHP_SECRET: secret,
-        };
+        const env = getDefaultEnvironmentVariables(secret, apiPort);
 
         const phpOptions = {
             cwd: appPath,
