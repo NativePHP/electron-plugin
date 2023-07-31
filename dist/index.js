@@ -89,6 +89,14 @@ class NativePHP {
             catch (e) {
                 console.error(e);
             }
+            let phpIniSettings = {};
+            try {
+                let { stdout } = yield (0, server_1.retrievePhpIniSettings)();
+                phpIniSettings = JSON.parse(stdout);
+            }
+            catch (e) {
+                console.error(e);
+            }
             utils_1.electronApp.setAppUserModelId(nativePHPConfig === null || nativePHPConfig === void 0 ? void 0 : nativePHPConfig.app_id);
             const deepLinkProtocol = nativePHPConfig === null || nativePHPConfig === void 0 ? void 0 : nativePHPConfig.deeplink_scheme;
             if (deepLinkProtocol) {
@@ -103,7 +111,7 @@ class NativePHP {
             }
             const apiPort = yield (0, server_1.startAPI)();
             console.log('API server started on port', apiPort.port);
-            phpProcesses = yield (0, server_1.servePhpApp)(apiPort.port);
+            phpProcesses = yield (0, server_1.servePhpApp)(apiPort.port, phpIniSettings);
             websocketProcess = (0, server_1.serveWebsockets)();
             yield (0, utils_2.notifyLaravel)('booted');
             if (((_a = nativePHPConfig === null || nativePHPConfig === void 0 ? void 0 : nativePHPConfig.updater) === null || _a === void 0 ? void 0 : _a.enabled) === true) {
@@ -114,7 +122,7 @@ class NativePHP {
             setTimeout(() => {
                 schedulerInterval = setInterval(() => {
                     console.log("Running scheduler...");
-                    (0, server_1.runScheduler)(apiPort.port);
+                    (0, server_1.runScheduler)(apiPort.port, phpIniSettings);
                 }, 60 * 1000);
             }, delay);
             app.on('activate', function (event, hasVisibleWindows) {

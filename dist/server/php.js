@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.retrieveNativePHPConfig = exports.getAppPath = exports.serveApp = exports.startScheduler = exports.startQueueWorker = void 0;
+exports.retrievePhpIniSettings = exports.retrieveNativePHPConfig = exports.getAppPath = exports.serveApp = exports.startScheduler = exports.startQueueWorker = void 0;
 const fs_1 = require("fs");
 const fs_extra_1 = require("fs-extra");
 const electron_store_1 = __importDefault(require("electron-store"));
@@ -35,6 +35,20 @@ function getPhpPort() {
         });
     });
 }
+function retrievePhpIniSettings() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const env = {
+            NATIVEPHP_STORAGE_PATH: storagePath,
+            NATIVEPHP_DATABASE_PATH: databaseFile,
+        };
+        const phpOptions = {
+            cwd: appPath,
+            env
+        };
+        return yield (0, util_1.promisify)(child_process_1.execFile)(state_1.default.php, ['artisan', 'native:php-ini'], phpOptions);
+    });
+}
+exports.retrievePhpIniSettings = retrievePhpIniSettings;
 function retrieveNativePHPConfig() {
     return __awaiter(this, void 0, void 0, function* () {
         const env = {
@@ -49,8 +63,16 @@ function retrieveNativePHPConfig() {
     });
 }
 exports.retrieveNativePHPConfig = retrieveNativePHPConfig;
-function callPhp(args, options) {
-    args.unshift('-d', 'memory_limit=512M', '-d', 'curl.cainfo=' + state_1.default.caCert, '-d', 'openssl.cafile=' + state_1.default.caCert);
+function callPhp(args, options, phpIniSettings = {}) {
+    let defaultIniSettings = {
+        'memory_limit': '512M',
+        'curl.cainfo': state_1.default.caCert,
+        'openssl.cafile': state_1.default.caCert
+    };
+    let iniSettings = Object.assign(defaultIniSettings, phpIniSettings);
+    Object.keys(iniSettings).forEach(key => {
+        args.unshift('-d', `${key}=${iniSettings[key]}`);
+    });
     return (0, child_process_1.spawn)(state_1.default.php, args, {
         cwd: options.cwd,
         env: Object.assign(Object.assign({}, process.env), options.env),
@@ -85,7 +107,7 @@ function ensureAppFoldersAreAvailable() {
         (0, fs_1.writeFileSync)(databaseFile, '');
     }
 }
-function startQueueWorker(secret, apiPort) {
+function startQueueWorker(secret, apiPort, phpIniSettings = {}) {
     const env = {
         APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
         APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
@@ -99,10 +121,10 @@ function startQueueWorker(secret, apiPort) {
         cwd: appPath,
         env
     };
-    return callPhp(['artisan', 'queue:work'], phpOptions);
+    return callPhp(['artisan', 'queue:work'], phpOptions, phpIniSettings);
 }
 exports.startQueueWorker = startQueueWorker;
-function startScheduler(secret, apiPort) {
+function startScheduler(secret, apiPort, phpIniSettings = {}) {
     const env = {
         APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
         APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
@@ -116,13 +138,13 @@ function startScheduler(secret, apiPort) {
         cwd: appPath,
         env
     };
-    return callPhp(['artisan', 'schedule:run'], phpOptions);
+    return callPhp(['artisan', 'schedule:run'], phpOptions, phpIniSettings);
 }
 exports.startScheduler = startScheduler;
-function serveApp(secret, apiPort) {
+function serveApp(secret, apiPort, phpIniSettings) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const appPath = getAppPath();
-        console.log('Starting PHP server...', `${state_1.default.php} artisan serve`, appPath);
+        console.log('Starting PHP server...', `${state_1.default.php} artisan serve`, appPath, phpIniSettings);
         ensureAppFoldersAreAvailable();
         console.log('Making sure app folders are available');
         const env = {
@@ -139,10 +161,10 @@ function serveApp(secret, apiPort) {
             env
         };
         const store = new electron_store_1.default();
-        callPhp(['artisan', 'storage:link', '--force'], phpOptions);
+        callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings);
         if (store.get('migrated_version') !== electron_1.app.getVersion() && process.env.NODE_ENV !== 'development') {
             console.log('Migrating database...');
-            callPhp(['artisan', 'migrate', '--force'], phpOptions);
+            callPhp(['artisan', 'migrate', '--force'], phpOptions, phpIniSettings);
             store.set('migrated_version', electron_1.app.getVersion());
         }
         if (process.env.NODE_ENV === 'development') {
@@ -154,7 +176,7 @@ function serveApp(secret, apiPort) {
         const phpServer = callPhp(['-S', `127.0.0.1:${phpPort}`, serverPath], {
             cwd: (0, path_1.join)(appPath, 'public'),
             env
-        });
+        }, phpIniSettings);
         const portRegex = /Development Server \(.*:([0-9]+)\) started/gm;
         phpServer.stdout.on('data', (data) => {
             const match = portRegex.exec(data.toString());
