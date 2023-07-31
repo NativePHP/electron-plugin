@@ -2,7 +2,7 @@ import type CrossProcessExports from 'electron'
 import { autoUpdater } from "electron-updater"
 import state from './server/state'
 import {electronApp, optimizer, is} from '@electron-toolkit/utils'
-import {startAPI, runScheduler, servePhpApp, serveWebsockets, retrieveNativePHPConfig} from './server'
+import {startAPI, runScheduler, servePhpApp, serveWebsockets, retrieveNativePHPConfig, retrievePhpIniSettings} from './server'
 import {notifyLaravel} from "./server/utils";
 import { app, BrowserWindow } from "electron";
 import { resolve } from "path";
@@ -97,6 +97,14 @@ class NativePHP {
         console.error(e);
       }
 
+      let phpIniSettings = {};
+      try {
+        let {stdout} = await retrievePhpIniSettings()
+        phpIniSettings = JSON.parse(stdout);
+      } catch (e) {
+        console.error(e);
+      }
+
       // @ts-ignore
       electronApp.setAppUserModelId(nativePHPConfig?.app_id)
 
@@ -116,7 +124,7 @@ class NativePHP {
       const apiPort = await startAPI()
       console.log('API server started on port', apiPort.port);
 
-      phpProcesses = await servePhpApp(apiPort.port)
+      phpProcesses = await servePhpApp(apiPort.port, phpIniSettings)
 
       websocketProcess = serveWebsockets()
 
@@ -133,7 +141,7 @@ class NativePHP {
       setTimeout(() => {
         schedulerInterval = setInterval(() => {
           console.log("Running scheduler...")
-          runScheduler(apiPort.port);
+          runScheduler(apiPort.port, phpIniSettings);
         }, 60 * 1000);
       }, delay);
 

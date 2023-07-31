@@ -22,6 +22,20 @@ async function getPhpPort() {
     });
 }
 
+async function retrievePhpIniSettings() {
+  const env = {
+    NATIVEPHP_STORAGE_PATH: storagePath,
+    NATIVEPHP_DATABASE_PATH: databaseFile,
+  };
+
+  const phpOptions = {
+    cwd: appPath,
+    env
+  };
+
+  return await promisify(execFile)(state.php, ['artisan', 'native:php-ini'], phpOptions);
+}
+
 async function retrieveNativePHPConfig() {
     const env = {
         NATIVEPHP_STORAGE_PATH: storagePath,
@@ -36,13 +50,18 @@ async function retrieveNativePHPConfig() {
     return await promisify(execFile)(state.php, ['artisan', 'native:config'], phpOptions);
 }
 
-function callPhp(args, options) {
-    // Add mandatory php.ini settings
-    args.unshift(
-      '-d', 'memory_limit=512M',
-      '-d', 'curl.cainfo=' + state.caCert,
-      '-d', 'openssl.cafile=' + state.caCert
-    );
+function callPhp(args, options, phpIniSettings = {}) {
+    let defaultIniSettings = {
+      'memory_limit': '512M',
+      'curl.cainfo': state.caCert,
+      'openssl.cafile': state.caCert
+    }
+
+    let iniSettings = Object.assign(defaultIniSettings, phpIniSettings);
+
+    Object.keys(iniSettings).forEach(key => {
+      args.unshift('-d', `${key}=${iniSettings[key]}`);
+    });
 
     return spawn(
         state.php,
@@ -98,7 +117,7 @@ function ensureAppFoldersAreAvailable() {
     }
 }
 
-function startQueueWorker(secret, apiPort) {
+function startQueueWorker(secret, apiPort, phpIniSettings = {}) {
     const env = {
         APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
         APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
@@ -114,10 +133,10 @@ function startQueueWorker(secret, apiPort) {
         env
     };
 
-    return callPhp(['artisan', 'queue:work'], phpOptions);
+    return callPhp(['artisan', 'queue:work'], phpOptions, phpIniSettings);
 }
 
-function startScheduler(secret, apiPort) {
+function startScheduler(secret, apiPort, phpIniSettings = {}) {
     const env = {
         APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
         APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
@@ -133,14 +152,14 @@ function startScheduler(secret, apiPort) {
         env
     };
 
-    return callPhp(['artisan', 'schedule:run'], phpOptions);
+    return callPhp(['artisan', 'schedule:run'], phpOptions, phpIniSettings);
 }
 
-function serveApp(secret, apiPort): Promise<ProcessResult> {
+function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
     return new Promise(async (resolve, reject) => {
         const appPath = getAppPath();
 
-        console.log('Starting PHP server...', `${state.php} artisan serve`, appPath)
+        console.log('Starting PHP server...', `${state.php} artisan serve`, appPath, phpIniSettings)
 
         ensureAppFoldersAreAvailable();
 
@@ -165,12 +184,12 @@ function serveApp(secret, apiPort): Promise<ProcessResult> {
 
         // Make sure the storage path is linked - as people can move the app around, we
         // need to run this every time the app starts
-        callPhp(['artisan', 'storage:link', '--force'], phpOptions)
+        callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings)
 
         // Migrate the database
         if (store.get('migrated_version') !== app.getVersion() && process.env.NODE_ENV !== 'development') {
             console.log('Migrating database...')
-            callPhp(['artisan', 'migrate', '--force'], phpOptions)
+            callPhp(['artisan', 'migrate', '--force'], phpOptions, phpIniSettings)
             store.set('migrated_version', app.getVersion())
         }
 
@@ -185,7 +204,7 @@ function serveApp(secret, apiPort): Promise<ProcessResult> {
         const phpServer = callPhp(['-S', `127.0.0.1:${phpPort}`, serverPath], {
             cwd: join(appPath, 'public'),
             env
-        })
+        }, phpIniSettings)
 
         const portRegex = /Development Server \(.*:([0-9]+)\) started/gm
 
@@ -219,4 +238,4 @@ function serveApp(secret, apiPort): Promise<ProcessResult> {
     })
 }
 
-export {startQueueWorker, startScheduler, serveApp, getAppPath, retrieveNativePHPConfig}
+export {startQueueWorker, startScheduler, serveApp, getAppPath, retrieveNativePHPConfig, retrievePhpIniSettings}
