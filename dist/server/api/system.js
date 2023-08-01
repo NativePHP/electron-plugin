@@ -31,4 +31,26 @@ router.post('/prompt-touch-id', (req, res) => __awaiter(void 0, void 0, void 0, 
         });
     }
 }));
+router.get('/printers', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const printers = yield electron_1.BrowserWindow.getAllWindows()[0].webContents.getPrintersAsync();
+    res.json({
+        printers,
+    });
+}));
+router.post('/print', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { printer, html } = req.body;
+    let printWindow = new electron_1.BrowserWindow({
+        show: false,
+    });
+    printWindow.webContents.on('did-finish-load', () => {
+        printWindow.webContents.print({
+            silent: true,
+            deviceName: printer,
+        }, (success, errorType) => {
+            res.sendStatus(200);
+        });
+        printWindow = null;
+    });
+    yield printWindow.loadURL(`data:text/html;charset=UTF-8,${html}`);
+}));
 exports.default = router;
