@@ -60,7 +60,12 @@ router.post('/print-to-pdf', async (req, res) => {
       writeFile(path, data, (e) => {
         if (e) throw error;
       });
+      
+      printWindow.close();
+      res.sendStatus(200);
     }).catch(e => {
+      printWindow.close();
+      
       res.status(400).json({
         error: e.message,
       });
