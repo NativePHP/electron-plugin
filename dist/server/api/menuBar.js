@@ -25,7 +25,7 @@ router.post("/hide", (req, res) => {
 });
 router.post("/create", (req, res) => {
     res.sendStatus(200);
-    const { width, height, url, label, alwaysOnTop, vibrancy, backgroundColor, transparency, icon, showDockIcon, onlyShowContextWindow, contextMenu } = req.body;
+    const { width, height, url, label, alwaysOnTop, vibrancy, backgroundColor, transparency, icon, showDockIcon, onlyShowContextWindow, windowPosition, contextMenu } = req.body;
     if (onlyShowContextWindow === true) {
         const tray = new electron_1.Tray(icon || state_1.default.icon.replace("icon.png", "IconTemplate.png"));
         tray.setContextMenu(buildMenu(contextMenu));
@@ -47,6 +47,7 @@ router.post("/create", (req, res) => {
             index: url,
             showDockIcon,
             showOnAllWorkspaces: false,
+            windowPosition: windowPosition !== null && windowPosition !== void 0 ? windowPosition : "trayCenter",
             browserWindow: {
                 width,
                 height,
