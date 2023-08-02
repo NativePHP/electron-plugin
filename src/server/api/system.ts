@@ -1,6 +1,5 @@
 import express from 'express'
 import {BrowserWindow, systemPreferences} from 'electron'
-import {writeFile} from 'fs'
 const router = express.Router();
 
 router.get('/can-prompt-touch-id', (req, res) => {
@@ -49,26 +48,24 @@ router.post('/print', async (req, res) => {
 });
 
 router.post('/print-to-pdf', async (req, res) => {
-  const {path, html} = req.body;
+  const {html} = req.body;
 
   let printWindow = new BrowserWindow({
     show: false,
   });
 
   printWindow.webContents.on('did-finish-load', () => {
-    printWindow.webContents.printToPDF({}).then(data => {
-      writeFile(path, data, (e) => {
-        if (e) throw error;
-      });
+    printWindow.webContents.printToPDF({'transferMode': 'ReturnAsBase64'}).then(data => {
+        printWindow.close();
+            res.json({
+              result: data.toString('base64'),
+            });
+      }).catch(e => {
+        printWindow.close();
       
-      printWindow.close();
-      res.sendStatus(200);
-    }).catch(e => {
-      printWindow.close();
-      
-      res.status(400).json({
-        error: e.message,
-      });
+        res.status(400).json({
+          error: e.message,
+        });
     });
   });
 
