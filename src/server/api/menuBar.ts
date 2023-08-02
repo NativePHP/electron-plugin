@@ -43,6 +43,7 @@ router.post("/create", (req, res) => {
     icon,
     showDockIcon,
     onlyShowContextWindow,
+    windowPosition,
     contextMenu
   } = req.body;
 
@@ -68,6 +69,7 @@ router.post("/create", (req, res) => {
       index: url,
       showDockIcon,
       showOnAllWorkspaces: false,
+      windowPosition: windowPosition ?? "trayCenter",
       browserWindow: {
         width,
         height,
