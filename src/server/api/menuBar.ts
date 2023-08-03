@@ -104,6 +104,15 @@ router.post("/create", (req, res) => {
       });
     });
 
+    state.activeMenuBar.tray.on("drop-files", (event, files) => {
+      notifyLaravel("events", {
+        event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarDroppedFiles",
+        payload: [
+          files
+        ]
+      });
+    });
+
     if (onlyShowContextWindow !== true) {
       state.activeMenuBar.tray.on("right-click", () => {
         notifyLaravel("events", {
