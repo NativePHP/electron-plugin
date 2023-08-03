@@ -36,6 +36,13 @@ router.post('/close', (req, res) => {
     }
     return res.sendStatus(200);
 });
+router.post('/hide', (req, res) => {
+    const { id } = req.body;
+    if (state_1.default.windows[id]) {
+        state_1.default.windows[id].hide();
+    }
+    return res.sendStatus(200);
+});
 router.get('/current', (req, res) => {
     const currentWindow = Object.values(state_1.default.windows).find(window => window.id === electron_1.BrowserWindow.getFocusedWindow().id);
     const id = Object.keys(state_1.default.windows).find(key => state_1.default.windows[key] === currentWindow);
@@ -145,6 +152,12 @@ router.post('/open', (req, res) => {
         }
         (0, utils_1.notifyLaravel)('events', {
             event: 'Native\\Laravel\\Events\\Windows\\WindowClosed',
+            payload: [id]
+        });
+    });
+    window.on('hide', (evt) => {
+        (0, utils_1.notifyLaravel)('events', {
+            event: 'Native\\Laravel\\Events\\Windows\\WindowHidden',
             payload: [id]
         });
     });
