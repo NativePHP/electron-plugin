@@ -20,7 +20,7 @@ router.post("/context-menu", (req, res) => {
   res.sendStatus(200);
   const { contextMenu } = req.body;
   
-  state_1.default.activeMenuBar.tray.setContextMenu(buildMenu(contextMenu));
+  state.activeMenuBar.tray.setContextMenu(buildMenu(contextMenu));
 });
 
 router.post("/show", (req, res) => {
