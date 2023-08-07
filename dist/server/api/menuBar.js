@@ -78,6 +78,14 @@ router.post("/create", (req, res) => {
                 event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarShown"
             });
         });
+        state_1.default.activeMenuBar.tray.on("drop-files", (event, files) => {
+            (0, utils_1.notifyLaravel)("events", {
+                event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarDroppedFiles",
+                payload: [
+                    files
+                ]
+            });
+        });
         if (onlyShowContextWindow !== true) {
             state_1.default.activeMenuBar.tray.on("right-click", () => {
                 (0, utils_1.notifyLaravel)("events", {

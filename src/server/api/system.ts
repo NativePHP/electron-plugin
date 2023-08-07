@@ -55,14 +55,14 @@ router.post('/print-to-pdf', async (req, res) => {
   });
 
   printWindow.webContents.on('did-finish-load', () => {
-    printWindow.webContents.printToPDF({'transferMode': 'ReturnAsBase64'}).then(data => {
+    printWindow.webContents.printToPDF({}).then(data => {
         printWindow.close();
             res.json({
               result: data.toString('base64'),
             });
       }).catch(e => {
         printWindow.close();
-      
+
         res.status(400).json({
           error: e.message,
         });

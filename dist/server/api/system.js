@@ -53,4 +53,24 @@ router.post('/print', (req, res) => __awaiter(void 0, void 0, void 0, function* 
     });
     yield printWindow.loadURL(`data:text/html;charset=UTF-8,${html}`);
 }));
+router.post('/print-to-pdf', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { html } = req.body;
+    let printWindow = new electron_1.BrowserWindow({
+        show: false,
+    });
+    printWindow.webContents.on('did-finish-load', () => {
+        printWindow.webContents.printToPDF({}).then(data => {
+            printWindow.close();
+            res.json({
+                result: data.toString('base64'),
+            });
+        }).catch(e => {
+            printWindow.close();
+            res.status(400).json({
+                error: e.message,
+            });
+        });
+    });
+    yield printWindow.loadURL(`data:text/html;charset=UTF-8,${html}`);
+}));
 exports.default = router;
