@@ -47,4 +47,29 @@ router.post('/print', async (req, res) => {
   await printWindow.loadURL(`data:text/html;charset=UTF-8,${html}`);
 });
 
+router.post('/print-to-pdf', async (req, res) => {
+  const {html} = req.body;
+
+  let printWindow = new BrowserWindow({
+    show: false,
+  });
+
+  printWindow.webContents.on('did-finish-load', () => {
+    printWindow.webContents.printToPDF({'transferMode': 'ReturnAsBase64'}).then(data => {
+        printWindow.close();
+            res.json({
+              result: data.toString('base64'),
+            });
+      }).catch(e => {
+        printWindow.close();
+      
+        res.status(400).json({
+          error: e.message,
+        });
+    });
+  });
+
+  await printWindow.loadURL(`data:text/html;charset=UTF-8,${html}`);
+});
+
 export default router;

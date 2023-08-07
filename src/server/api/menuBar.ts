@@ -43,6 +43,7 @@ router.post("/create", (req, res) => {
     icon,
     showDockIcon,
     onlyShowContextWindow,
+    windowPosition,
     contextMenu
   } = req.body;
 
@@ -68,6 +69,7 @@ router.post("/create", (req, res) => {
       index: url,
       showDockIcon,
       showOnAllWorkspaces: false,
+      windowPosition: windowPosition ?? "trayCenter",
       browserWindow: {
         width,
         height,
@@ -99,6 +101,15 @@ router.post("/create", (req, res) => {
     state.activeMenuBar.on("show", () => {
       notifyLaravel("events", {
         event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarShown"
+      });
+    });
+
+    state.activeMenuBar.tray.on("drop-files", (event, files) => {
+      notifyLaravel("events", {
+        event: "\\Native\\Laravel\\Events\\MenuBar\\MenuBarDroppedFiles",
+        payload: [
+          files
+        ]
       });
     });
 
