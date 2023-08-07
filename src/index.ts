@@ -75,6 +75,23 @@ class NativePHP {
   }
 
   private bootstrapApp(app: Electron.CrossProcessExports.App) {
+    let nativePHPConfig = {};
+
+    // Wait for promise to resolve
+    retrieveNativePHPConfig().then((result) => {
+      try {
+        nativePHPConfig = JSON.parse(result.stdout);
+      } catch (e) {
+        console.error(e);
+      }
+    }).catch((err) => {
+      console.error(err);
+    }).finally(() => {
+      this.setupApp(nativePHPConfig);
+    });
+  }
+
+  private setupApp(nativePHPConfig: any) {
     app.whenReady().then(async () => {
 
       // Only run this on macOS
@@ -89,17 +106,9 @@ class NativePHP {
         optimizer.watchWindowShortcuts(window)
       })
 
-      let nativePHPConfig = {};
-      try {
-        let {stdout} = await retrieveNativePHPConfig()
-        nativePHPConfig = JSON.parse(stdout);
-      } catch (e) {
-        console.error(e);
-      }
-
       let phpIniSettings = {};
       try {
-        let {stdout} = await retrievePhpIniSettings()
+        let { stdout } = await retrievePhpIniSettings()
         phpIniSettings = JSON.parse(stdout);
       } catch (e) {
         console.error(e);
@@ -145,7 +154,7 @@ class NativePHP {
         }, 60 * 1000);
       }, delay);
 
-      app.on('activate', function (event, hasVisibleWindows) {
+      app.on('activate', function(event, hasVisibleWindows) {
         // On macOS it's common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.
         if (!hasVisibleWindows) {
@@ -153,7 +162,7 @@ class NativePHP {
         }
         event.preventDefault();
       })
-    })
+    });
   }
 }
 
