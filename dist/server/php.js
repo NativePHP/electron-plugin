@@ -38,6 +38,7 @@ function getPhpPort() {
 function retrievePhpIniSettings() {
     return __awaiter(this, void 0, void 0, function* () {
         const env = {
+            NATIVEPHP_RUNNING: 'true',
             NATIVEPHP_STORAGE_PATH: storagePath,
             NATIVEPHP_DATABASE_PATH: databaseFile,
         };
@@ -52,6 +53,7 @@ exports.retrievePhpIniSettings = retrievePhpIniSettings;
 function retrieveNativePHPConfig() {
     return __awaiter(this, void 0, void 0, function* () {
         const env = {
+            NATIVEPHP_RUNNING: 'true',
             NATIVEPHP_STORAGE_PATH: storagePath,
             NATIVEPHP_DATABASE_PATH: databaseFile,
         };
@@ -111,10 +113,10 @@ function startQueueWorker(secret, apiPort, phpIniSettings = {}) {
     const env = {
         APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
         APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
-        NATVEPHP_STORAGE_PATH: storagePath,
-        NATVEPHP_DATABASE_PATH: databaseFile,
-        NATVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
-        NATVEPHP_RUNNING: true,
+        NATIVEPHP_STORAGE_PATH: storagePath,
+        NATIVEPHP_DATABASE_PATH: databaseFile,
+        NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
+        NATIVEPHP_RUNNING: true,
         NATIVEPHP_SECRET: secret
     };
     const phpOptions = {

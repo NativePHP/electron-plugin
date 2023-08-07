@@ -16,6 +16,7 @@ const state_1 = __importDefault(require("./server/state"));
 const utils_1 = require("@electron-toolkit/utils");
 const server_1 = require("./server");
 const utils_2 = require("./server/utils");
+const electron_1 = require("electron");
 const path_1 = require("path");
 const ps_node_1 = __importDefault(require("ps-node"));
 let phpProcesses = [];
@@ -73,22 +74,29 @@ class NativePHP {
         });
     }
     bootstrapApp(app) {
-        app.whenReady().then(() => __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            if (process.platform === 'darwin' && process.env.NODE_ENV === 'development') {
-                app.dock.setIcon(state_1.default.icon);
-            }
-            app.on('browser-window-created', (_, window) => {
-                utils_1.optimizer.watchWindowShortcuts(window);
-            });
-            let nativePHPConfig = {};
+        let nativePHPConfig = {};
+        (0, server_1.retrieveNativePHPConfig)().then((result) => {
             try {
-                let { stdout } = yield (0, server_1.retrieveNativePHPConfig)();
-                nativePHPConfig = JSON.parse(stdout);
+                nativePHPConfig = JSON.parse(result.stdout);
             }
             catch (e) {
                 console.error(e);
             }
+        }).catch((err) => {
+            console.error(err);
+        }).finally(() => {
+            this.setupApp(nativePHPConfig);
+        });
+    }
+    setupApp(nativePHPConfig) {
+        electron_1.app.whenReady().then(() => __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            if (process.platform === 'darwin' && process.env.NODE_ENV === 'development') {
+                electron_1.app.dock.setIcon(state_1.default.icon);
+            }
+            electron_1.app.on('browser-window-created', (_, window) => {
+                utils_1.optimizer.watchWindowShortcuts(window);
+            });
             let phpIniSettings = {};
             try {
                 let { stdout } = yield (0, server_1.retrievePhpIniSettings)();
@@ -102,11 +110,11 @@ class NativePHP {
             if (deepLinkProtocol) {
                 if (process.defaultApp) {
                     if (process.argv.length >= 2) {
-                        app.setAsDefaultProtocolClient(deepLinkProtocol, process.execPath, [(0, path_1.resolve)(process.argv[1])]);
+                        electron_1.app.setAsDefaultProtocolClient(deepLinkProtocol, process.execPath, [(0, path_1.resolve)(process.argv[1])]);
                     }
                 }
                 else {
-                    app.setAsDefaultProtocolClient(deepLinkProtocol);
+                    electron_1.app.setAsDefaultProtocolClient(deepLinkProtocol);
                 }
             }
             const apiPort = yield (0, server_1.startAPI)();
@@ -125,7 +133,7 @@ class NativePHP {
                     (0, server_1.runScheduler)(apiPort.port, phpIniSettings);
                 }, 60 * 1000);
             }, delay);
-            app.on('activate', function (event, hasVisibleWindows) {
+            electron_1.app.on('activate', function (event, hasVisibleWindows) {
                 if (!hasVisibleWindows) {
                     (0, utils_2.notifyLaravel)('booted');
                 }
