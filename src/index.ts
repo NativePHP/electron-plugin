@@ -148,6 +148,8 @@ class NativePHP {
       let delay = (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
 
       setTimeout(() => {
+        console.log("Running scheduler...")
+        runScheduler(apiPort.port, phpIniSettings);
         schedulerInterval = setInterval(() => {
           console.log("Running scheduler...")
           runScheduler(apiPort.port, phpIniSettings);
