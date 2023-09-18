@@ -11,9 +11,9 @@ import {
 import { appendCookie } from "./utils";
 import state from "./state";
 
-export async function servePhpApp(apiPort: number, phpIniSettings: object) {
+export async function servePhpApp(apiPort: number, phpIniSettings: object, appPort: number | null = null) {
   const processes = [];
-  const result = await serveApp(state.randomSecret, apiPort, phpIniSettings);
+  const result = await serveApp(state.randomSecret, apiPort, phpIniSettings, appPort);
   processes.push(result.process);
 
   processes.push(startQueueWorker(state.randomSecret, apiPort, phpIniSettings));
@@ -35,7 +35,7 @@ export function startQueue(apiPort: number, phpIniSettings: object) {
 }
 
 export function startAPI(): Promise<APIProcess> {
-  return startAPIServer(state.randomSecret);
+  return startAPIServer(state.randomSecret); 
 }
 
 export { serveWebsockets, retrieveNativePHPConfig, retrievePhpIniSettings };

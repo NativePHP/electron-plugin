@@ -27,11 +27,11 @@ const databasePath = (0, path_1.join)(electron_1.app.getPath('userData'), 'datab
 const databaseFile = (0, path_1.join)(databasePath, 'database.sqlite');
 const argumentEnv = getArgumentEnv();
 const appPath = getAppPath();
-function getPhpPort() {
+function getPhpPort(appPort = null) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield (0, get_port_1.default)({
             host: '127.0.0.1',
-            port: get_port_1.default.makeRange(8100, 9000)
+            port: appPort || get_port_1.default.makeRange(8100, 9000)
         });
     });
 }
@@ -164,7 +164,7 @@ function getDefaultEnvironmentVariables(secret, apiPort) {
         NATIVEPHP_RECENT_PATH: getPath('recent'),
     };
 }
-function serveApp(secret, apiPort, phpIniSettings) {
+function serveApp(secret, apiPort, phpIniSettings, appPort) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const appPath = getAppPath();
         console.log('Starting PHP server...', `${state_1.default.php} artisan serve`, appPath, phpIniSettings);
@@ -186,7 +186,7 @@ function serveApp(secret, apiPort, phpIniSettings) {
             console.log('Skipping Database migration while in development.');
             console.log('You may migrate manually by running: php artisan native:migrate');
         }
-        const phpPort = yield getPhpPort();
+        const phpPort = yield getPhpPort(appPort);
         const serverPath = (0, path_1.join)(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
         const phpServer = callPhp(['-S', `127.0.0.1:${phpPort}`, serverPath], {
             cwd: (0, path_1.join)(appPath, 'public'),

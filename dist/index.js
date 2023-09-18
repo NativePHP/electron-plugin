@@ -117,9 +117,10 @@ class NativePHP {
                     electron_1.app.setAsDefaultProtocolClient(deepLinkProtocol);
                 }
             }
+            state_1.default.phpPort = nativePHPConfig === null || nativePHPConfig === void 0 ? void 0 : nativePHPConfig.app_port;
             const apiPort = yield (0, server_1.startAPI)();
             console.log('API server started on port', apiPort.port);
-            phpProcesses = yield (0, server_1.servePhpApp)(apiPort.port, phpIniSettings);
+            phpProcesses = yield (0, server_1.servePhpApp)(apiPort.port, phpIniSettings, nativePHPConfig === null || nativePHPConfig === void 0 ? void 0 : nativePHPConfig.app_port);
             websocketProcess = (0, server_1.serveWebsockets)();
             yield (0, utils_2.notifyLaravel)('booted');
             if (((_a = nativePHPConfig === null || nativePHPConfig === void 0 ? void 0 : nativePHPConfig.updater) === null || _a === void 0 ? void 0 : _a.enabled) === true) {
