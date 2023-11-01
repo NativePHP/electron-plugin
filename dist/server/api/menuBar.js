@@ -30,9 +30,12 @@ router.post("/hide", (req, res) => {
 });
 router.post("/create", (req, res) => {
     res.sendStatus(200);
-    const { width, height, url, label, alwaysOnTop, vibrancy, backgroundColor, transparency, icon, showDockIcon, onlyShowContextWindow, windowPosition, contextMenu } = req.body;
+
+    const { width, height, url, label, alwaysOnTop, vibrancy, backgroundColor, transparency, icon, withoutIcon, showDockIcon, onlyShowContextWindow, windowPosition, contextMenu } = req.body;
+    const menuBarIcon = withoutIcon ? electron_1.nativeImage.createEmpty() : (icon || state_1.default.icon.replace("icon.png", "IconTemplate.png"));
+
     if (onlyShowContextWindow === true) {
-        const tray = new electron_1.Tray(icon || state_1.default.icon.replace("icon.png", "IconTemplate.png"));
+        const tray = new electron_1.Tray(menuBarIcon);
         tray.setContextMenu(buildMenu(contextMenu));
         state_1.default.activeMenuBar = (0, menubar_1.menubar)({
             tray,
@@ -48,7 +51,7 @@ router.post("/create", (req, res) => {
     }
     else {
         state_1.default.activeMenuBar = (0, menubar_1.menubar)({
-            icon: icon || state_1.default.icon.replace("icon.png", "IconTemplate.png"),
+            icon: menuBarIcon,
             index: url,
             showDockIcon,
             showOnAllWorkspaces: false,

@@ -1,5 +1,5 @@
 import express from "express";
-import { Menu, Tray } from "electron";
+import { Menu, Tray, nativeImage } from "electron";
 import { mapMenu } from "./helper";
 import state from "../state";
 import { menubar } from "menubar";
@@ -48,14 +48,17 @@ router.post("/create", (req, res) => {
     backgroundColor,
     transparency,
     icon,
+    withoutIcon,
     showDockIcon,
     onlyShowContextWindow,
     windowPosition,
     contextMenu
   } = req.body;
 
+  const menuBarIcon = withoutIcon ? nativeImage.createEmpty() : (icon || state.icon.replace("icon.png", "IconTemplate.png"));
+
   if (onlyShowContextWindow === true) {
-    const tray = new Tray(icon || state.icon.replace("icon.png", "IconTemplate.png"));
+    const tray = new Tray(menuBarIcon);
     tray.setContextMenu(buildMenu(contextMenu));
 
     state.activeMenuBar = menubar({
@@ -72,7 +75,7 @@ router.post("/create", (req, res) => {
 
   } else {
     state.activeMenuBar = menubar({
-      icon: icon || state.icon.replace("icon.png", "IconTemplate.png"),
+      icon: menuBarIcon,
       index: url,
       showDockIcon,
       showOnAllWorkspaces: false,
