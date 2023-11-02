@@ -40,6 +40,15 @@ router.post('/close', (req, res) => {
     return res.sendStatus(200)
 })
 
+router.post('/hide', (req, res) => {
+    const {id} = req.body
+
+    if (state.windows[id]) {
+        state.windows[id].hide()
+    }
+    return res.sendStatus(200)
+})
+
 router.get('/current', (req, res) => {
     const currentWindow = Object.values(state.windows).find(window => window.id === BrowserWindow.getFocusedWindow().id)
     // Find object key with matching value
@@ -215,6 +224,13 @@ router.post('/open', (req, res) => {
         }
         notifyLaravel('events', {
             event: 'Native\\Laravel\\Events\\Windows\\WindowClosed',
+            payload: [id]
+        })
+    })
+
+    window.on('hide', (evt) => {
+        notifyLaravel('events', {
+            event: 'Native\\Laravel\\Events\\Windows\\WindowHidden',
             payload: [id]
         })
     })
