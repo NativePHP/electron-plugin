@@ -129,11 +129,13 @@ class NativePHP {
         }
       }
 
+      state.phpPort = nativePHPConfig?.app_port
+      
       // Start PHP server and websockets
       const apiPort = await startAPI()
       console.log('API server started on port', apiPort.port);
 
-      phpProcesses = await servePhpApp(apiPort.port, phpIniSettings)
+      phpProcesses = await servePhpApp(apiPort.port, phpIniSettings, nativePHPConfig?.app_port)
 
       websocketProcess = serveWebsockets()
 

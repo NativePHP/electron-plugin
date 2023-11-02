@@ -21,10 +21,10 @@ Object.defineProperty(exports, "retrieveNativePHPConfig", { enumerable: true, ge
 Object.defineProperty(exports, "retrievePhpIniSettings", { enumerable: true, get: function () { return php_1.retrievePhpIniSettings; } });
 const utils_1 = require("./utils");
 const state_1 = __importDefault(require("./state"));
-function servePhpApp(apiPort, phpIniSettings) {
+function servePhpApp(apiPort, phpIniSettings, appPort = null) {
     return __awaiter(this, void 0, void 0, function* () {
         const processes = [];
-        const result = yield (0, php_1.serveApp)(state_1.default.randomSecret, apiPort, phpIniSettings);
+        const result = yield (0, php_1.serveApp)(state_1.default.randomSecret, apiPort, phpIniSettings, appPort);
         processes.push(result.process);
         processes.push((0, php_1.startQueueWorker)(state_1.default.randomSecret, apiPort, phpIniSettings));
         state_1.default.phpPort = result.port;

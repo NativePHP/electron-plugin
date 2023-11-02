@@ -15,10 +15,10 @@ const databaseFile = join(databasePath, 'database.sqlite')
 const argumentEnv = getArgumentEnv();
 const appPath = getAppPath();
 
-async function getPhpPort() {
+async function getPhpPort(appPort: number | null = null) {
     return await getPort({
         host: '127.0.0.1',
-        port: getPort.makeRange(8100, 9000)
+        port: appPort || getPort.makeRange(8100, 9000)
     });
 }
 
@@ -180,7 +180,7 @@ function getDefaultEnvironmentVariables(secret, apiPort) {
   };
 }
 
-function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
+function serveApp(secret, apiPort, phpIniSettings, appPort): Promise<ProcessResult> {
     return new Promise(async (resolve, reject) => {
         const appPath = getAppPath();
 
@@ -215,7 +215,7 @@ function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
             console.log('You may migrate manually by running: php artisan native:migrate')
         }
 
-        const phpPort = await getPhpPort();
+        const phpPort = await getPhpPort(appPort);
 
         const serverPath = join(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php')
         const phpServer = callPhp(['-S', `127.0.0.1:${phpPort}`, serverPath], {
