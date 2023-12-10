@@ -16,6 +16,14 @@ ipcRenderer.on('log', (event, {level, message, context}) => {
 
 // Add Livewire event listeners
 ipcRenderer.on('native-event', (event, data) => {
+  
+  // add support for livewire 3
+  // @ts-ignore
+  if (window.Livewire) {
+    // @ts-ignore
+    window.Livewire.dispatch('nativephp:' + data.event, data.payload);
+  }
+
   // @ts-ignore
   if (!window.livewire) {
     return;
