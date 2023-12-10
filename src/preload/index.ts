@@ -21,7 +21,7 @@ ipcRenderer.on('native-event', (event, data) => {
   // @ts-ignore
   if (window.Livewire) {
     // @ts-ignore
-    window.Livewire.dispatch('nativephp:' + data.event, data.payload);
+    window.Livewire.dispatch('native:' + data.event, data.payload);
   }
 
   // add support for livewire 2
