@@ -39,7 +39,7 @@ electron_1.ipcRenderer.on('log', (event, { level, message, context }) => {
 });
 electron_1.ipcRenderer.on('native-event', (event, data) => {
     if (window.Livewire) {
-        window.Livewire.dispatch('nativephp:' + data.event, data.payload);
+        window.Livewire.dispatch('native:' + data.event, data.payload);
     }
     if (window.livewire) {
         window.livewire.components.components().forEach(component => {
