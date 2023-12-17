@@ -28,6 +28,12 @@ router.post('/position', (req, res) => {
     (_a = state_1.default.windows[id]) === null || _a === void 0 ? void 0 : _a.setPosition(parseInt(x), parseInt(y), animate);
     res.sendStatus(200);
 });
+router.post('/reload', (req, res) => {
+  var _a;
+  const { id } = req.body;
+  (_a = state_1.default.windows[id]) === null || _a === void 0 ? void 0 : _a.reload();
+  res.sendStatus(200);
+});
 router.post('/close', (req, res) => {
     const { id } = req.body;
     if (state_1.default.windows[id]) {

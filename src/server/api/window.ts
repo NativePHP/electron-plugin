@@ -30,6 +30,13 @@ router.post('/position', (req, res) => {
   res.sendStatus(200)
 })
 
+router.post('/reload', (req, res) => {
+  const {id} = req.body
+  state.windows[id]?.reload()
+
+  res.sendStatus(200)
+});
+
 router.post('/close', (req, res) => {
     const {id} = req.body
 
