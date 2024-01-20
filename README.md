@@ -4,4 +4,4 @@ The Electron back-end for NativePHP.
 
 ## Issues
 
-Please raise any issues on the [NativePHP/laravel](/nativephp/laravel/issues/new/choose) repo.
+Please raise any issues on the [NativePHP/laravel](https://github.com/NativePHP/laravel/issues) repo.
