@@ -8,8 +8,8 @@ const electron_1 = require("electron");
 const utils_1 = require("../utils");
 const router = express_1.default.Router();
 router.post('/', (req, res) => {
-    const { title, body } = req.body;
-    const notification = new electron_1.Notification({ title, body });
+    const { title, body, subtitle, silent, icon, hasReply, timeoutType, replyPlaceholder, sound, urgency, actions, closeButtonText, toastXml } = req.body;
+    const notification = new electron_1.Notification({ title, body, subtitle, silent, icon, hasReply, timeoutType, replyPlaceholder, sound, urgency, actions, closeButtonText, toastXml });
     notification.on("click", (event) => {
         (0, utils_1.notifyLaravel)('events', {
             event: '\\Native\\Laravel\\Events\\Notifications\\NotificationClicked',
