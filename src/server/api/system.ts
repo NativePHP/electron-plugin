@@ -72,4 +72,27 @@ router.post('/print-to-pdf', async (req, res) => {
   await printWindow.loadURL(`data:text/html;charset=UTF-8,${html}`);
 });
 
+router.get('/timezone', async (req, res) => {
+  let timezoneWindow = new BrowserWindow({
+    show: false,
+  });
+
+  timezoneWindow.webContents.on('did-finish-load', () => {
+    timezoneWindow.webContents.executeJavaScript('Intl.DateTimeFormat().resolvedOptions().timeZone').then(timezone => {
+      timezoneWindow.close();
+        res.json({
+          result: timezone,
+        });
+      }).catch(e => {
+        timezoneWindow.close();
+
+        res.status(400).json({
+          error: e.message,
+        });
+    });
+  });
+
+  await timezoneWindow.loadURL(`data:text/html;charset=UTF-8,<html></html>`);
+});
+
 export default router;
