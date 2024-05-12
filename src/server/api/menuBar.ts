@@ -63,6 +63,7 @@ router.post("/create", (req, res) => {
       index: false,
       showDockIcon,
       showOnAllWorkspaces: false,
+      resizable: false,
       browserWindow: {
         show: false,
         width: 0,
@@ -84,6 +85,7 @@ router.post("/create", (req, res) => {
         vibrancy,
         backgroundColor,
         transparent: transparency,
+        resizable: false,
         webPreferences: {
           nodeIntegration: true,
           sandbox: false,
