@@ -5,11 +5,11 @@ import { getAppPath } from "./php";
 import state from "./state";
 
 function serveWebsockets() {
-  if (!existsSync(join(getAppPath(), 'vendor', 'beyondcode', 'laravel-websockets'))) {
+  if (!existsSync(join(getAppPath(), 'vendor', 'laravel', 'reverb'))) {
     return;
   }
 
-  const phpServer = spawn(state.php, ["artisan", "websockets:serve"], {
+  const phpServer = spawn(state.php, ["artisan", "reverb:start"], {
     cwd: getAppPath()
   });
 
