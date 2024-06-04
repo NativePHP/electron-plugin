@@ -31,7 +31,7 @@ router.post('/text', (req, res) => {
 });
 
 router.get('/html', (req, res) => {
-  const {type} = req.query
+    const {type} = req.query
 
     res.json({
         // @ts-ignore
