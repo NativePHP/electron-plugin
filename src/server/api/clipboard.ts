@@ -1,6 +1,7 @@
 import * as express from 'express';
 const router = express.Router();
 import { clipboard, nativeImage } from 'electron'
+import { notifyLaravel } from "../utils";
 
 const DEFAULT_TYPE = 'clipboard'
 
@@ -11,6 +12,8 @@ router.get('/text', (req, res) => {
         // @ts-ignore
         text: clipboard.readText(type || DEFAULT_TYPE)
     })
+
+    proceedToNotification(ClipboardEvents.Read, ClipboardContentTypes.Text)
 });
 
 router.post('/text', (req, res) => {
@@ -23,15 +26,19 @@ router.post('/text', (req, res) => {
     res.json({
         text,
     })
+
+    proceedToNotification(ClipboardEvents.Written, ClipboardContentTypes.Text)
 });
 
 router.get('/html', (req, res) => {
-    const {type} = req.query
+  const {type} = req.query
 
     res.json({
         // @ts-ignore
         html: clipboard.readHTML(type || DEFAULT_TYPE)
     })
+
+    proceedToNotification(ClipboardEvents.Read, ClipboardContentTypes.Html)
 });
 
 router.post('/html', (req, res) => {
@@ -43,6 +50,8 @@ router.post('/html', (req, res) => {
     res.json({
       html,
     })
+
+    proceedToNotification(ClipboardEvents.Written, ClipboardContentTypes.Html)
 });
 
 router.get('/image', (req, res) => {
@@ -53,6 +62,8 @@ router.get('/image', (req, res) => {
     res.json({
         image: image.isEmpty() ? null : image.toDataURL()
     })
+
+    proceedToNotification(ClipboardEvents.Read, ClipboardContentTypes.Image)
 });
 
 router.post('/image', (req, res) => {
@@ -71,6 +82,8 @@ router.post('/image', (req, res) => {
     }
 
     res.sendStatus(200);
+
+    proceedToNotification(ClipboardEvents.Written, ClipboardContentTypes.Image)
 });
 
 router.delete('/', (req, res) => {
@@ -81,5 +94,14 @@ router.delete('/', (req, res) => {
 
     res.sendStatus(200);
 });
+
+function proceedToNotification(eventType: ClipboardEvents, contentType: ClipboardContentTypes) {
+  notifyLaravel("events", {
+    event: `\\Native\\Laravel\\Events\\Clipboard\\${eventType}`,
+    payload: {
+      contentType
+    }
+  });
+}
 
 export default router;
