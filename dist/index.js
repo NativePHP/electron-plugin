@@ -85,6 +85,7 @@ class NativePHP {
             this.setDockIcon();
             this.setAppUserModelId(config);
             this.setDeepLinkHandler(config);
+            this.startAutoUpdater(config);
             yield this.startElectronApi();
             state_1.default.phpIni = yield this.loadPhpIni();
             yield this.startPhpApp();
@@ -92,7 +93,19 @@ class NativePHP {
             yield this.startWebsockets();
             this.startScheduler();
             yield (0, utils_2.notifyLaravel)("booted");
-            this.autoUpdater(config);
+        });
+    }
+    loadConfig() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let config = {};
+            try {
+                const result = yield (0, server_1.retrieveNativePHPConfig)();
+                config = JSON.parse(result.stdout);
+            }
+            catch (error) {
+                console.error(error);
+            }
+            return config;
         });
     }
     setDockIcon() {
@@ -119,7 +132,7 @@ class NativePHP {
             }
         }
     }
-    autoUpdater(config) {
+    startAutoUpdater(config) {
         var _a;
         if (((_a = config === null || config === void 0 ? void 0 : config.updater) === null || _a === void 0 ? void 0 : _a.enabled) === true) {
             electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
@@ -158,19 +171,6 @@ class NativePHP {
                 (0, server_1.runScheduler)();
             }, 60 * 1000);
         }, delay);
-    }
-    loadConfig() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let config = {};
-            try {
-                const result = yield (0, server_1.retrieveNativePHPConfig)();
-                config = JSON.parse(result.stdout);
-            }
-            catch (error) {
-                console.error(error);
-            }
-            return config;
-        });
     }
     loadPhpIni() {
         return __awaiter(this, void 0, void 0, function* () {

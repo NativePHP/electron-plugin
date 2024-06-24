@@ -91,6 +91,7 @@ class NativePHP {
     this.setDockIcon();
     this.setAppUserModelId(config);
     this.setDeepLinkHandler(config);
+    this.startAutoUpdater(config);
 
     await this.startElectronApi();
 
@@ -102,8 +103,20 @@ class NativePHP {
     this.startScheduler();
 
     await notifyLaravel("booted");
+  }
 
-    this.autoUpdater(config);
+  private async loadConfig() {
+    let config = {};
+
+    try {
+      const result = await retrieveNativePHPConfig();
+
+      config = JSON.parse(result.stdout);
+    } catch (error) {
+      console.error(error);
+    }
+
+    return config;
   }
 
   private setDockIcon() {
@@ -136,7 +149,7 @@ class NativePHP {
     }
   }
 
-  private autoUpdater(config) {
+  private startAutoUpdater(config) {
     if (config?.updater?.enabled === true) {
       autoUpdater.checkForUpdatesAndNotify();
     }
@@ -192,20 +205,6 @@ class NativePHP {
         }
       });
   };
-
-  private async loadConfig() {
-    let config = {};
-
-    try {
-      const result = await retrieveNativePHPConfig();
-
-      config = JSON.parse(result.stdout);
-    } catch (error) {
-      console.error(error);
-    }
-
-    return config;
-  }
 
   private async loadPhpIni() {
     let config = {};
