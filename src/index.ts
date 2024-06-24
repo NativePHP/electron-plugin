@@ -20,20 +20,6 @@ class NativePHP {
   websocketProcess = undefined;
   schedulerInterval = undefined;
 
-  killChildProcesses = () => {
-    const processes = [...this.phpProcesses, this.websocketProcess].filter(
-      (p) => p !== undefined
-    );
-
-    processes.forEach((process) => {
-      try {
-        ps.kill(process.pid);
-      } catch (err) {
-        console.error(err);
-      }
-    });
-  };
-
   public bootstrap(
     app: CrossProcessExports.App,
     icon: string,
@@ -71,7 +57,7 @@ class NativePHP {
       }
     });
 
-    app.on("before-quit", (e) => {
+    app.on("before-quit", () => {
       if (this.schedulerInterval) {
         clearInterval(this.schedulerInterval);
       }
@@ -92,6 +78,7 @@ class NativePHP {
       if (!hasVisibleWindows) {
         notifyLaravel("booted");
       }
+
       event.preventDefault();
     });
   }
@@ -102,23 +89,20 @@ class NativePHP {
     const config = await this.loadConfig();
 
     this.setDockIcon();
-
     this.setAppUserModelId(config);
     this.setDeepLinkHandler(config);
 
-    await this.bootElectronApi();
+    await this.startElectronApi();
 
     const phpIni = await this.loadPhpIni();
 
-    this.phpProcesses = await servePhpApp(phpIni);
-
-    this.websocketProcess = serveWebsockets();
+    await this.startPhpApp(phpIni);
+    await this.startWebsockets();
+    this.startScheduler(phpIni);
 
     await notifyLaravel("booted");
 
-    this.bootAutoUpdater(config);
-
-    this.bootScheduler(phpIni);
+    this.autoUpdater(config);
   }
 
   private setDockIcon() {
@@ -151,13 +135,13 @@ class NativePHP {
     }
   }
 
-  private bootAutoUpdater(config) {
+  private autoUpdater(config) {
     if (config?.updater?.enabled === true) {
       autoUpdater.checkForUpdatesAndNotify();
     }
   }
 
-  private async bootElectronApi() {
+  private async startElectronApi() {
     // Start an Express server so that the Electron app can be controlled from PHP via API
     const electronApi = await startAPI();
 
@@ -166,7 +150,15 @@ class NativePHP {
     console.log("Electron API server started on port", electronApi.port);
   }
 
-  private bootScheduler(phpIni) {
+  private async startPhpApp(phpIni) {
+    this.phpProcesses = await servePhpApp(phpIni);
+  }
+
+  private startWebsockets() {
+    this.websocketProcess = serveWebsockets();
+  }
+
+  private startScheduler(phpIni) {
     const now = new Date();
     const delay =
       (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
@@ -180,6 +172,20 @@ class NativePHP {
       }, 60 * 1000);
     }, delay);
   }
+
+  private killChildProcesses = () => {
+    const processes = [...this.phpProcesses, this.websocketProcess].filter(
+      (p) => p !== undefined
+    );
+
+    processes.forEach((process) => {
+      try {
+        ps.kill(process.pid);
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  };
 
   private async loadConfig() {
     let config = {};

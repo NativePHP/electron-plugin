@@ -62,7 +62,7 @@ class NativePHP {
                 app.quit();
             }
         });
-        app.on("before-quit", (e) => {
+        app.on("before-quit", () => {
             if (this.schedulerInterval) {
                 clearInterval(this.schedulerInterval);
             }
@@ -85,13 +85,13 @@ class NativePHP {
             this.setDockIcon();
             this.setAppUserModelId(config);
             this.setDeepLinkHandler(config);
-            yield this.bootElectronApi();
+            yield this.startElectronApi();
             const phpIni = yield this.loadPhpIni();
-            this.phpProcesses = yield (0, server_1.servePhpApp)(phpIni);
-            this.websocketProcess = (0, server_1.serveWebsockets)();
+            yield this.startPhpApp(phpIni);
+            yield this.startWebsockets();
+            this.startScheduler(phpIni);
             yield (0, utils_2.notifyLaravel)("booted");
-            this.bootAutoUpdater(config);
-            this.bootScheduler(phpIni);
+            this.autoUpdater(config);
         });
     }
     setDockIcon() {
@@ -118,20 +118,28 @@ class NativePHP {
             }
         }
     }
-    bootAutoUpdater(config) {
+    autoUpdater(config) {
         var _a;
         if (((_a = config === null || config === void 0 ? void 0 : config.updater) === null || _a === void 0 ? void 0 : _a.enabled) === true) {
             electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
         }
     }
-    bootElectronApi() {
+    startElectronApi() {
         return __awaiter(this, void 0, void 0, function* () {
             const electronApi = yield (0, server_1.startAPI)();
             state_1.default.electronApiPort = electronApi.port;
             console.log("Electron API server started on port", electronApi.port);
         });
     }
-    bootScheduler(phpIni) {
+    startPhpApp(phpIni) {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.phpProcesses = yield (0, server_1.servePhpApp)(phpIni);
+        });
+    }
+    startWebsockets() {
+        this.websocketProcess = (0, server_1.serveWebsockets)();
+    }
+    startScheduler(phpIni) {
         const now = new Date();
         const delay = (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
         setTimeout(() => {
