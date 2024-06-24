@@ -98,11 +98,11 @@ class NativePHP {
     }
     setupApp(nativePHPConfig) {
         electron_1.app.whenReady().then(() => __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            if (process.platform === "darwin" &&
-                process.env.NODE_ENV === "development") {
-                electron_1.app.dock.setIcon(state_1.default.icon);
-            }
+            this.setDockIcon();
+            this.setAppUserModelId(nativePHPConfig);
+            this.setDeepLinkHandler(nativePHPConfig);
+            const apiPort = yield (0, server_1.startAPI)();
+            console.log("API server started on port", apiPort.port);
             let phpIniSettings = {};
             try {
                 const { stdout } = yield (0, server_1.retrievePhpIniSettings)();
@@ -111,28 +111,10 @@ class NativePHP {
             catch (e) {
                 console.error(e);
             }
-            utils_1.electronApp.setAppUserModelId(nativePHPConfig === null || nativePHPConfig === void 0 ? void 0 : nativePHPConfig.app_id);
-            const deepLinkProtocol = nativePHPConfig === null || nativePHPConfig === void 0 ? void 0 : nativePHPConfig.deeplink_scheme;
-            if (deepLinkProtocol) {
-                if (process.defaultApp) {
-                    if (process.argv.length >= 2) {
-                        electron_1.app.setAsDefaultProtocolClient(deepLinkProtocol, process.execPath, [
-                            (0, path_1.resolve)(process.argv[1]),
-                        ]);
-                    }
-                }
-                else {
-                    electron_1.app.setAsDefaultProtocolClient(deepLinkProtocol);
-                }
-            }
-            const apiPort = yield (0, server_1.startAPI)();
-            console.log("API server started on port", apiPort.port);
             this.phpProcesses = yield (0, server_1.servePhpApp)(apiPort.port, phpIniSettings);
             this.websocketProcess = (0, server_1.serveWebsockets)();
             yield (0, utils_2.notifyLaravel)("booted");
-            if (((_a = nativePHPConfig === null || nativePHPConfig === void 0 ? void 0 : nativePHPConfig.updater) === null || _a === void 0 ? void 0 : _a.enabled) === true) {
-                electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
-            }
+            this.bootAutoUpdater(nativePHPConfig);
             const now = new Date();
             const delay = (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
             setTimeout(() => {
@@ -144,6 +126,36 @@ class NativePHP {
                 }, 60 * 1000);
             }, delay);
         }));
+    }
+    setDockIcon() {
+        if (process.platform === "darwin" &&
+            process.env.NODE_ENV === "development") {
+            electron_1.app.dock.setIcon(state_1.default.icon);
+        }
+    }
+    setAppUserModelId(config) {
+        utils_1.electronApp.setAppUserModelId(config === null || config === void 0 ? void 0 : config.app_id);
+    }
+    setDeepLinkHandler(config) {
+        const deepLinkProtocol = config === null || config === void 0 ? void 0 : config.deeplink_scheme;
+        if (deepLinkProtocol) {
+            if (process.defaultApp) {
+                if (process.argv.length >= 2) {
+                    electron_1.app.setAsDefaultProtocolClient(deepLinkProtocol, process.execPath, [
+                        (0, path_1.resolve)(process.argv[1]),
+                    ]);
+                }
+            }
+            else {
+                electron_1.app.setAsDefaultProtocolClient(deepLinkProtocol);
+            }
+        }
+    }
+    bootAutoUpdater(config) {
+        var _a;
+        if (((_a = config === null || config === void 0 ? void 0 : config.updater) === null || _a === void 0 ? void 0 : _a.enabled) === true) {
+            electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
+        }
     }
 }
 module.exports = new NativePHP();

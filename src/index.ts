@@ -118,13 +118,14 @@ class NativePHP {
 
   private setupApp(nativePHPConfig: any) {
     app.whenReady().then(async () => {
-      // Only run this on macOS
-      if (
-        process.platform === "darwin" &&
-        process.env.NODE_ENV === "development"
-      ) {
-        app.dock.setIcon(state.icon);
-      }
+      this.setDockIcon();
+
+      this.setAppUserModelId(nativePHPConfig);
+      this.setDeepLinkHandler(nativePHPConfig);
+
+      // Start PHP server and websockets
+      const apiPort = await startAPI();
+      console.log("API server started on port", apiPort.port);
 
       let phpIniSettings = {};
       try {
@@ -134,37 +135,13 @@ class NativePHP {
         console.error(e);
       }
 
-      // @ts-ignore
-      electronApp.setAppUserModelId(nativePHPConfig?.app_id);
-
-      // @ts-ignore
-      const deepLinkProtocol = nativePHPConfig?.deeplink_scheme;
-      if (deepLinkProtocol) {
-        if (process.defaultApp) {
-          if (process.argv.length >= 2) {
-            app.setAsDefaultProtocolClient(deepLinkProtocol, process.execPath, [
-              resolve(process.argv[1]),
-            ]);
-          }
-        } else {
-          app.setAsDefaultProtocolClient(deepLinkProtocol);
-        }
-      }
-
-      // Start PHP server and websockets
-      const apiPort = await startAPI();
-      console.log("API server started on port", apiPort.port);
-
       this.phpProcesses = await servePhpApp(apiPort.port, phpIniSettings);
 
       this.websocketProcess = serveWebsockets();
 
       await notifyLaravel("booted");
 
-      // @ts-ignore
-      if (nativePHPConfig?.updater?.enabled === true) {
-        autoUpdater.checkForUpdatesAndNotify();
-      }
+      this.bootAutoUpdater(nativePHPConfig);
 
       const now = new Date();
       const delay =
@@ -179,6 +156,42 @@ class NativePHP {
         }, 60 * 1000);
       }, delay);
     });
+  }
+
+  private setDockIcon() {
+    // Only run this on macOS
+    if (
+      process.platform === "darwin" &&
+      process.env.NODE_ENV === "development"
+    ) {
+      app.dock.setIcon(state.icon);
+    }
+  }
+
+  private setAppUserModelId(config) {
+    electronApp.setAppUserModelId(config?.app_id);
+  }
+
+  private setDeepLinkHandler(config) {
+    const deepLinkProtocol = config?.deeplink_scheme;
+
+    if (deepLinkProtocol) {
+      if (process.defaultApp) {
+        if (process.argv.length >= 2) {
+          app.setAsDefaultProtocolClient(deepLinkProtocol, process.execPath, [
+            resolve(process.argv[1]),
+          ]);
+        }
+      } else {
+        app.setAsDefaultProtocolClient(deepLinkProtocol);
+      }
+    }
+  }
+
+  private bootAutoUpdater(config) {
+    if (config?.updater?.enabled === true) {
+      autoUpdater.checkForUpdatesAndNotify();
+    }
   }
 }
 
