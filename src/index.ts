@@ -48,7 +48,6 @@ class NativePHP {
 
     this.bootstrapApp(app);
     this.addEventListeners(app);
-    this.addTerminateListeners(app);
   }
 
   private addEventListeners(app: Electron.CrossProcessExports.App) {
@@ -71,15 +70,22 @@ class NativePHP {
         app.quit();
       }
     });
-  }
 
-  private addTerminateListeners(app: Electron.CrossProcessExports.App) {
     app.on("before-quit", (e) => {
       if (this.schedulerInterval) {
         clearInterval(this.schedulerInterval);
       }
 
       this.killChildProcesses();
+    });
+
+    app.on("activate", function (event, hasVisibleWindows) {
+      // On macOS it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      if (!hasVisibleWindows) {
+        notifyLaravel("booted");
+      }
+      event.preventDefault();
     });
   }
 
@@ -172,15 +178,6 @@ class NativePHP {
           runScheduler(apiPort.port, phpIniSettings);
         }, 60 * 1000);
       }, delay);
-
-      app.on("activate", function (event, hasVisibleWindows) {
-        // On macOS it's common to re-create a window in the app when the
-        // dock icon is clicked and there are no other windows open.
-        if (!hasVisibleWindows) {
-          notifyLaravel("booted");
-        }
-        event.preventDefault();
-      });
     });
   }
 }
