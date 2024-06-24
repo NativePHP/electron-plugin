@@ -96,64 +96,29 @@ class NativePHP {
     });
   }
 
-  private bootstrapApp(app: Electron.CrossProcessExports.App) {
-    let nativePHPConfig = {};
+  private async bootstrapApp(app: Electron.CrossProcessExports.App) {
+    await app.whenReady();
 
-    // Wait for promise to resolve
-    retrieveNativePHPConfig()
-      .then((result) => {
-        try {
-          nativePHPConfig = JSON.parse(result.stdout);
-        } catch (e) {
-          console.error(e);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => {
-        this.setupApp(nativePHPConfig);
-      });
-  }
+    const config = await this.loadConfig();
 
-  private setupApp(nativePHPConfig: any) {
-    app.whenReady().then(async () => {
-      this.setDockIcon();
+    this.setDockIcon();
 
-      this.setAppUserModelId(nativePHPConfig);
-      this.setDeepLinkHandler(nativePHPConfig);
+    this.setAppUserModelId(config);
+    this.setDeepLinkHandler(config);
 
-      await this.bootElectronApi();
+    await this.bootElectronApi();
 
-      let phpIniSettings = {};
-      try {
-        const { stdout } = await retrievePhpIniSettings();
-        phpIniSettings = JSON.parse(stdout);
-      } catch (e) {
-        console.error(e);
-      }
+    const phpIni = await this.loadPhpIni();
 
-      this.phpProcesses = await servePhpApp(phpIniSettings);
+    this.phpProcesses = await servePhpApp(phpIni);
 
-      this.websocketProcess = serveWebsockets();
+    this.websocketProcess = serveWebsockets();
 
-      await notifyLaravel("booted");
+    await notifyLaravel("booted");
 
-      this.bootAutoUpdater(nativePHPConfig);
+    this.bootAutoUpdater(config);
 
-      const now = new Date();
-      const delay =
-        (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
-
-      setTimeout(() => {
-        console.log("Running scheduler...");
-        runScheduler(phpIniSettings);
-        this.schedulerInterval = setInterval(() => {
-          console.log("Running scheduler...");
-          runScheduler(phpIniSettings);
-        }, 60 * 1000);
-      }, delay);
-    });
+    this.bootScheduler(phpIni);
   }
 
   private setDockIcon() {
@@ -186,6 +151,12 @@ class NativePHP {
     }
   }
 
+  private bootAutoUpdater(config) {
+    if (config?.updater?.enabled === true) {
+      autoUpdater.checkForUpdatesAndNotify();
+    }
+  }
+
   private async bootElectronApi() {
     // Start an Express server so that the Electron app can be controlled from PHP via API
     const electronApi = await startAPI();
@@ -195,10 +166,47 @@ class NativePHP {
     console.log("Electron API server started on port", electronApi.port);
   }
 
-  private bootAutoUpdater(config) {
-    if (config?.updater?.enabled === true) {
-      autoUpdater.checkForUpdatesAndNotify();
+  private bootScheduler(phpIni) {
+    const now = new Date();
+    const delay =
+      (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
+
+    setTimeout(() => {
+      console.log("Running scheduler...");
+      runScheduler(phpIni);
+      this.schedulerInterval = setInterval(() => {
+        console.log("Running scheduler...");
+        runScheduler(phpIni);
+      }, 60 * 1000);
+    }, delay);
+  }
+
+  private async loadConfig() {
+    let config = {};
+
+    try {
+      const result = await retrieveNativePHPConfig();
+
+      config = JSON.parse(result.stdout);
+    } catch (error) {
+      console.error(error);
     }
+
+    return config;
+  }
+
+  private async loadPhpIni() {
+    let config = {};
+
+    try {
+      const result = await retrievePhpIniSettings();
+
+      config = JSON.parse(result.stdout);
+    } catch (error) {
+      console.error(error);
+    }
+
+    return config;
   }
 }
 

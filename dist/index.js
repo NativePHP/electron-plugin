@@ -79,52 +79,20 @@ class NativePHP {
         });
     }
     bootstrapApp(app) {
-        let nativePHPConfig = {};
-        (0, server_1.retrieveNativePHPConfig)()
-            .then((result) => {
-            try {
-                nativePHPConfig = JSON.parse(result.stdout);
-            }
-            catch (e) {
-                console.error(e);
-            }
-        })
-            .catch((err) => {
-            console.error(err);
-        })
-            .finally(() => {
-            this.setupApp(nativePHPConfig);
-        });
-    }
-    setupApp(nativePHPConfig) {
-        electron_1.app.whenReady().then(() => __awaiter(this, void 0, void 0, function* () {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield app.whenReady();
+            const config = yield this.loadConfig();
             this.setDockIcon();
-            this.setAppUserModelId(nativePHPConfig);
-            this.setDeepLinkHandler(nativePHPConfig);
+            this.setAppUserModelId(config);
+            this.setDeepLinkHandler(config);
             yield this.bootElectronApi();
-            let phpIniSettings = {};
-            try {
-                const { stdout } = yield (0, server_1.retrievePhpIniSettings)();
-                phpIniSettings = JSON.parse(stdout);
-            }
-            catch (e) {
-                console.error(e);
-            }
-            this.phpProcesses = yield (0, server_1.servePhpApp)(phpIniSettings);
+            const phpIni = yield this.loadPhpIni();
+            this.phpProcesses = yield (0, server_1.servePhpApp)(phpIni);
             this.websocketProcess = (0, server_1.serveWebsockets)();
             yield (0, utils_2.notifyLaravel)("booted");
-            this.bootAutoUpdater(nativePHPConfig);
-            const now = new Date();
-            const delay = (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
-            setTimeout(() => {
-                console.log("Running scheduler...");
-                (0, server_1.runScheduler)(phpIniSettings);
-                this.schedulerInterval = setInterval(() => {
-                    console.log("Running scheduler...");
-                    (0, server_1.runScheduler)(phpIniSettings);
-                }, 60 * 1000);
-            }, delay);
-        }));
+            this.bootAutoUpdater(config);
+            this.bootScheduler(phpIni);
+        });
     }
     setDockIcon() {
         if (process.platform === "darwin" &&
@@ -150,6 +118,12 @@ class NativePHP {
             }
         }
     }
+    bootAutoUpdater(config) {
+        var _a;
+        if (((_a = config === null || config === void 0 ? void 0 : config.updater) === null || _a === void 0 ? void 0 : _a.enabled) === true) {
+            electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
+        }
+    }
     bootElectronApi() {
         return __awaiter(this, void 0, void 0, function* () {
             const electronApi = yield (0, server_1.startAPI)();
@@ -157,11 +131,43 @@ class NativePHP {
             console.log("Electron API server started on port", electronApi.port);
         });
     }
-    bootAutoUpdater(config) {
-        var _a;
-        if (((_a = config === null || config === void 0 ? void 0 : config.updater) === null || _a === void 0 ? void 0 : _a.enabled) === true) {
-            electron_updater_1.autoUpdater.checkForUpdatesAndNotify();
-        }
+    bootScheduler(phpIni) {
+        const now = new Date();
+        const delay = (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
+        setTimeout(() => {
+            console.log("Running scheduler...");
+            (0, server_1.runScheduler)(phpIni);
+            this.schedulerInterval = setInterval(() => {
+                console.log("Running scheduler...");
+                (0, server_1.runScheduler)(phpIni);
+            }, 60 * 1000);
+        }, delay);
+    }
+    loadConfig() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let config = {};
+            try {
+                const result = yield (0, server_1.retrieveNativePHPConfig)();
+                config = JSON.parse(result.stdout);
+            }
+            catch (error) {
+                console.error(error);
+            }
+            return config;
+        });
+    }
+    loadPhpIni() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let config = {};
+            try {
+                const result = yield (0, server_1.retrievePhpIniSettings)();
+                config = JSON.parse(result.stdout);
+            }
+            catch (error) {
+                console.error(error);
+            }
+            return config;
+        });
     }
 }
 module.exports = new NativePHP();
