@@ -43,7 +43,6 @@ class NativePHP {
         state_1.default.caCert = cert;
         this.bootstrapApp(app);
         this.addEventListeners(app);
-        this.addTerminateListeners(app);
     }
     addEventListeners(app) {
         app.on("open-url", (event, url) => {
@@ -63,13 +62,20 @@ class NativePHP {
                 app.quit();
             }
         });
-    }
-    addTerminateListeners(app) {
         app.on("before-quit", (e) => {
             if (this.schedulerInterval) {
                 clearInterval(this.schedulerInterval);
             }
             this.killChildProcesses();
+        });
+        app.on("browser-window-created", (_, window) => {
+            utils_1.optimizer.watchWindowShortcuts(window);
+        });
+        app.on("activate", function (event, hasVisibleWindows) {
+            if (!hasVisibleWindows) {
+                (0, utils_2.notifyLaravel)("booted");
+            }
+            event.preventDefault();
         });
     }
     bootstrapApp(app) {
@@ -97,9 +103,6 @@ class NativePHP {
                 process.env.NODE_ENV === "development") {
                 electron_1.app.dock.setIcon(state_1.default.icon);
             }
-            electron_1.app.on("browser-window-created", (_, window) => {
-                utils_1.optimizer.watchWindowShortcuts(window);
-            });
             let phpIniSettings = {};
             try {
                 const { stdout } = yield (0, server_1.retrievePhpIniSettings)();
@@ -140,12 +143,6 @@ class NativePHP {
                     (0, server_1.runScheduler)(apiPort.port, phpIniSettings);
                 }, 60 * 1000);
             }, delay);
-            electron_1.app.on("activate", function (event, hasVisibleWindows) {
-                if (!hasVisibleWindows) {
-                    (0, utils_2.notifyLaravel)("booted");
-                }
-                event.preventDefault();
-            });
         }));
     }
 }
