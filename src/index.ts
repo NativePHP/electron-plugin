@@ -17,8 +17,8 @@ import ps from "ps-node";
 
 class NativePHP {
   phpProcesses = [];
-  websocketProcess = null;
-  schedulerInterval = null;
+  websocketProcess = undefined;
+  schedulerInterval = undefined;
 
   killChildProcesses = () => {
     const processes = [...this.phpProcesses, this.websocketProcess].filter(

@@ -22,8 +22,8 @@ const ps_node_1 = __importDefault(require("ps-node"));
 class NativePHP {
     constructor() {
         this.phpProcesses = [];
-        this.websocketProcess = null;
-        this.schedulerInterval = null;
+        this.websocketProcess = undefined;
+        this.schedulerInterval = undefined;
         this.killChildProcesses = () => {
             const processes = [...this.phpProcesses, this.websocketProcess].filter((p) => p !== undefined);
             processes.forEach((process) => {
