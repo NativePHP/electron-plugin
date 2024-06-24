@@ -101,8 +101,7 @@ class NativePHP {
             this.setDockIcon();
             this.setAppUserModelId(nativePHPConfig);
             this.setDeepLinkHandler(nativePHPConfig);
-            const apiPort = yield (0, server_1.startAPI)();
-            console.log("API server started on port", apiPort.port);
+            yield this.bootElectronApi();
             let phpIniSettings = {};
             try {
                 const { stdout } = yield (0, server_1.retrievePhpIniSettings)();
@@ -111,7 +110,7 @@ class NativePHP {
             catch (e) {
                 console.error(e);
             }
-            this.phpProcesses = yield (0, server_1.servePhpApp)(apiPort.port, phpIniSettings);
+            this.phpProcesses = yield (0, server_1.servePhpApp)(phpIniSettings);
             this.websocketProcess = (0, server_1.serveWebsockets)();
             yield (0, utils_2.notifyLaravel)("booted");
             this.bootAutoUpdater(nativePHPConfig);
@@ -119,10 +118,10 @@ class NativePHP {
             const delay = (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
             setTimeout(() => {
                 console.log("Running scheduler...");
-                (0, server_1.runScheduler)(apiPort.port, phpIniSettings);
+                (0, server_1.runScheduler)(phpIniSettings);
                 this.schedulerInterval = setInterval(() => {
                     console.log("Running scheduler...");
-                    (0, server_1.runScheduler)(apiPort.port, phpIniSettings);
+                    (0, server_1.runScheduler)(phpIniSettings);
                 }, 60 * 1000);
             }, delay);
         }));
@@ -150,6 +149,13 @@ class NativePHP {
                 electron_1.app.setAsDefaultProtocolClient(deepLinkProtocol);
             }
         }
+    }
+    bootElectronApi() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const electronApi = yield (0, server_1.startAPI)();
+            state_1.default.electronApiPort = electronApi.port;
+            console.log("Electron API server started on port", electronApi.port);
+        });
     }
     bootAutoUpdater(config) {
         var _a;

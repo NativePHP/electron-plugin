@@ -123,9 +123,7 @@ class NativePHP {
       this.setAppUserModelId(nativePHPConfig);
       this.setDeepLinkHandler(nativePHPConfig);
 
-      // Start PHP server and websockets
-      const apiPort = await startAPI();
-      console.log("API server started on port", apiPort.port);
+      await this.bootElectronApi();
 
       let phpIniSettings = {};
       try {
@@ -135,7 +133,7 @@ class NativePHP {
         console.error(e);
       }
 
-      this.phpProcesses = await servePhpApp(apiPort.port, phpIniSettings);
+      this.phpProcesses = await servePhpApp(phpIniSettings);
 
       this.websocketProcess = serveWebsockets();
 
@@ -149,10 +147,10 @@ class NativePHP {
 
       setTimeout(() => {
         console.log("Running scheduler...");
-        runScheduler(apiPort.port, phpIniSettings);
+        runScheduler(phpIniSettings);
         this.schedulerInterval = setInterval(() => {
           console.log("Running scheduler...");
-          runScheduler(apiPort.port, phpIniSettings);
+          runScheduler(phpIniSettings);
         }, 60 * 1000);
       }, delay);
     });
@@ -186,6 +184,15 @@ class NativePHP {
         app.setAsDefaultProtocolClient(deepLinkProtocol);
       }
     }
+  }
+
+  private async bootElectronApi() {
+    // Start an Express server so that the Electron app can be controlled from PHP via API
+    const electronApi = await startAPI();
+
+    state.electronApiPort = electronApi.port;
+
+    console.log("Electron API server started on port", electronApi.port);
   }
 
   private bootAutoUpdater(config) {

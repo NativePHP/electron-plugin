@@ -1,22 +1,27 @@
-import { session } from "electron";
 import serveWebsockets from "./websockets";
 import startAPIServer, { APIProcess } from "./api";
 import {
-  startQueueWorker,
-  startScheduler,
-  serveApp,
   retrieveNativePHPConfig,
   retrievePhpIniSettings,
+  serveApp,
+  startQueueWorker,
+  startScheduler,
 } from "./php";
 import { appendCookie } from "./utils";
 import state from "./state";
 
-export async function servePhpApp(apiPort: number, phpIniSettings: object) {
+export async function servePhpApp(phpIniSettings: object) {
   const processes = [];
-  const result = await serveApp(state.randomSecret, apiPort, phpIniSettings);
+  const result = await serveApp(
+    state.randomSecret,
+    state.electronApiPort,
+    phpIniSettings
+  );
   processes.push(result.process);
 
-  processes.push(startQueueWorker(state.randomSecret, apiPort, phpIniSettings));
+  processes.push(
+    startQueueWorker(state.randomSecret, state.electronApiPort, phpIniSettings)
+  );
 
   state.phpPort = result.port;
   await appendCookie();
@@ -24,13 +29,17 @@ export async function servePhpApp(apiPort: number, phpIniSettings: object) {
   return processes;
 }
 
-export function runScheduler(apiPort: number, phpIniSettings: object) {
-  startScheduler(state.randomSecret, apiPort, phpIniSettings);
+export function runScheduler(phpIniSettings: object) {
+  startScheduler(state.randomSecret, state.electronApiPort, phpIniSettings);
 }
 
-export function startQueue(apiPort: number, phpIniSettings: object) {
+export function startQueue(phpIniSettings: object) {
   if (!process.env.NATIVE_PHP_SKIP_QUEUE) {
-    return startQueueWorker(state.randomSecret, apiPort, phpIniSettings);
+    return startQueueWorker(
+      state.randomSecret,
+      state.electronApiPort,
+      phpIniSettings
+    );
   }
 }
 

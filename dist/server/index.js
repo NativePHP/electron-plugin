@@ -21,25 +21,25 @@ Object.defineProperty(exports, "retrieveNativePHPConfig", { enumerable: true, ge
 Object.defineProperty(exports, "retrievePhpIniSettings", { enumerable: true, get: function () { return php_1.retrievePhpIniSettings; } });
 const utils_1 = require("./utils");
 const state_1 = __importDefault(require("./state"));
-function servePhpApp(apiPort, phpIniSettings) {
+function servePhpApp(phpIniSettings) {
     return __awaiter(this, void 0, void 0, function* () {
         const processes = [];
-        const result = yield (0, php_1.serveApp)(state_1.default.randomSecret, apiPort, phpIniSettings);
+        const result = yield (0, php_1.serveApp)(state_1.default.randomSecret, state_1.default.electronApiPort, phpIniSettings);
         processes.push(result.process);
-        processes.push((0, php_1.startQueueWorker)(state_1.default.randomSecret, apiPort, phpIniSettings));
+        processes.push((0, php_1.startQueueWorker)(state_1.default.randomSecret, state_1.default.electronApiPort, phpIniSettings));
         state_1.default.phpPort = result.port;
         yield (0, utils_1.appendCookie)();
         return processes;
     });
 }
 exports.servePhpApp = servePhpApp;
-function runScheduler(apiPort, phpIniSettings) {
-    (0, php_1.startScheduler)(state_1.default.randomSecret, apiPort, phpIniSettings);
+function runScheduler(phpIniSettings) {
+    (0, php_1.startScheduler)(state_1.default.randomSecret, state_1.default.electronApiPort, phpIniSettings);
 }
 exports.runScheduler = runScheduler;
-function startQueue(apiPort, phpIniSettings) {
+function startQueue(phpIniSettings) {
     if (!process.env.NATIVE_PHP_SKIP_QUEUE) {
-        return (0, php_1.startQueueWorker)(state_1.default.randomSecret, apiPort, phpIniSettings);
+        return (0, php_1.startQueueWorker)(state_1.default.randomSecret, state_1.default.electronApiPort, phpIniSettings);
     }
 }
 exports.startQueue = startQueue;
