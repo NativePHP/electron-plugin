@@ -25,6 +25,7 @@ interface State {
   activeMenuBar: any;
   php: string | null;
   phpPort: number | null;
+  phpIni: any;
   caCert: string | null;
   icon: string | null;
   windows: Record<string, BrowserWindow>;
@@ -51,6 +52,7 @@ export default {
   activeMenuBar: null,
   php: null,
   phpPort: null,
+  phpIni: null,
   caCert: null,
   icon: null,
   store: settingsStore,

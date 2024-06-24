@@ -32,6 +32,7 @@ exports.default = {
     activeMenuBar: null,
     php: null,
     phpPort: null,
+    phpIni: null,
     caCert: null,
     icon: null,
     store: settingsStore,

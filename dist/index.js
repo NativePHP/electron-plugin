@@ -21,12 +21,12 @@ const path_1 = require("path");
 const ps_node_1 = __importDefault(require("ps-node"));
 class NativePHP {
     constructor() {
-        this.phpProcesses = [];
-        this.websocketProcess = undefined;
+        this.processes = [];
         this.schedulerInterval = undefined;
         this.killChildProcesses = () => {
-            const processes = [...this.phpProcesses, this.websocketProcess].filter((p) => p !== undefined);
-            processes.forEach((process) => {
+            this.processes
+                .filter((p) => p !== undefined)
+                .forEach((process) => {
                 try {
                     ps_node_1.default.kill(process.pid);
                 }
@@ -86,10 +86,11 @@ class NativePHP {
             this.setAppUserModelId(config);
             this.setDeepLinkHandler(config);
             yield this.startElectronApi();
-            const phpIni = yield this.loadPhpIni();
-            yield this.startPhpApp(phpIni);
+            state_1.default.phpIni = yield this.loadPhpIni();
+            yield this.startPhpApp();
+            yield this.startQueueWorker();
             yield this.startWebsockets();
-            this.startScheduler(phpIni);
+            this.startScheduler();
             yield (0, utils_2.notifyLaravel)("booted");
             this.autoUpdater(config);
         });
@@ -131,23 +132,30 @@ class NativePHP {
             console.log("Electron API server started on port", electronApi.port);
         });
     }
-    startPhpApp(phpIni) {
+    startPhpApp() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.phpProcesses = yield (0, server_1.servePhpApp)(phpIni);
+            this.processes.push(yield (0, server_1.startPhpApp)());
+        });
+    }
+    startQueueWorker() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.processes.push(yield (0, server_1.startQueue)());
         });
     }
     startWebsockets() {
-        this.websocketProcess = (0, server_1.serveWebsockets)();
+        return __awaiter(this, void 0, void 0, function* () {
+            this.processes.push(yield (0, server_1.startWebsockets)());
+        });
     }
-    startScheduler(phpIni) {
+    startScheduler() {
         const now = new Date();
         const delay = (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
         setTimeout(() => {
             console.log("Running scheduler...");
-            (0, server_1.runScheduler)(phpIni);
+            (0, server_1.runScheduler)();
             this.schedulerInterval = setInterval(() => {
                 console.log("Running scheduler...");
-                (0, server_1.runScheduler)(phpIni);
+                (0, server_1.runScheduler)();
             }, 60 * 1000);
         }, delay);
     }

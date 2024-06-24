@@ -1,4 +1,4 @@
-import serveWebsockets from "./websockets";
+import startWebsockets from "./websockets";
 import startAPIServer, { APIProcess } from "./api";
 import {
   retrieveNativePHPConfig,
@@ -10,41 +10,38 @@ import {
 import { appendCookie } from "./utils";
 import state from "./state";
 
-export async function servePhpApp(phpIniSettings: object) {
-  const processes = [];
+export async function startPhpApp() {
   const result = await serveApp(
     state.randomSecret,
     state.electronApiPort,
-    phpIniSettings
-  );
-  processes.push(result.process);
-
-  processes.push(
-    startQueueWorker(state.randomSecret, state.electronApiPort, phpIniSettings)
+    state.phpIni
   );
 
   state.phpPort = result.port;
+
   await appendCookie();
 
-  return processes;
+  return result.process;
 }
 
-export function runScheduler(phpIniSettings: object) {
-  startScheduler(state.randomSecret, state.electronApiPort, phpIniSettings);
-}
-
-export function startQueue(phpIniSettings: object) {
+export function startQueue() {
   if (!process.env.NATIVE_PHP_SKIP_QUEUE) {
     return startQueueWorker(
       state.randomSecret,
       state.electronApiPort,
-      phpIniSettings
+      state.phpIni
     );
+  } else {
+    return undefined;
   }
+}
+
+export function runScheduler() {
+  startScheduler(state.randomSecret, state.electronApiPort, state.phpIni);
 }
 
 export function startAPI(): Promise<APIProcess> {
   return startAPIServer(state.randomSecret);
 }
 
-export { serveWebsockets, retrieveNativePHPConfig, retrievePhpIniSettings };
+export { startWebsockets, retrieveNativePHPConfig, retrievePhpIniSettings };

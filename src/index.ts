@@ -7,17 +7,17 @@ import {
   retrieveNativePHPConfig,
   retrievePhpIniSettings,
   runScheduler,
-  servePhpApp,
-  serveWebsockets,
   startAPI,
+  startPhpApp,
+  startQueue,
+  startWebsockets,
 } from "./server";
 import { notifyLaravel } from "./server/utils";
 import { resolve } from "path";
 import ps from "ps-node";
 
 class NativePHP {
-  phpProcesses = [];
-  websocketProcess = undefined;
+  processes = [];
   schedulerInterval = undefined;
 
   public bootstrap(
@@ -94,11 +94,12 @@ class NativePHP {
 
     await this.startElectronApi();
 
-    const phpIni = await this.loadPhpIni();
+    state.phpIni = await this.loadPhpIni();
 
-    await this.startPhpApp(phpIni);
+    await this.startPhpApp();
+    await this.startQueueWorker();
     await this.startWebsockets();
-    this.startScheduler(phpIni);
+    this.startScheduler();
 
     await notifyLaravel("booted");
 
@@ -150,41 +151,46 @@ class NativePHP {
     console.log("Electron API server started on port", electronApi.port);
   }
 
-  private async startPhpApp(phpIni) {
-    this.phpProcesses = await servePhpApp(phpIni);
+  private async startPhpApp() {
+    this.processes.push(await startPhpApp());
   }
 
-  private startWebsockets() {
-    this.websocketProcess = serveWebsockets();
+  private async startQueueWorker() {
+    this.processes.push(await startQueue());
   }
 
-  private startScheduler(phpIni) {
+  private async startWebsockets() {
+    this.processes.push(await startWebsockets());
+  }
+
+  private startScheduler() {
     const now = new Date();
     const delay =
       (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
 
     setTimeout(() => {
       console.log("Running scheduler...");
-      runScheduler(phpIni);
+
+      runScheduler();
+
       this.schedulerInterval = setInterval(() => {
         console.log("Running scheduler...");
-        runScheduler(phpIni);
+
+        runScheduler();
       }, 60 * 1000);
     }, delay);
   }
 
   private killChildProcesses = () => {
-    const processes = [...this.phpProcesses, this.websocketProcess].filter(
-      (p) => p !== undefined
-    );
-
-    processes.forEach((process) => {
-      try {
-        ps.kill(process.pid);
-      } catch (err) {
-        console.error(err);
-      }
-    });
+    this.processes
+      .filter((p) => p !== undefined)
+      .forEach((process) => {
+        try {
+          ps.kill(process.pid);
+        } catch (err) {
+          console.error(err);
+        }
+      });
   };
 
   private async loadConfig() {
