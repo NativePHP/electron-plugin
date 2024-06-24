@@ -164,6 +164,20 @@ class NativePHP {
     console.log("Electron API server started on port", electronApi.port);
   }
 
+  private async loadPhpIni() {
+    let config = {};
+
+    try {
+      const result = await retrievePhpIniSettings();
+
+      config = JSON.parse(result.stdout);
+    } catch (error) {
+      console.error(error);
+    }
+
+    return config;
+  }
+
   private async startPhpApp() {
     this.processes.push(await startPhpApp());
   }
@@ -194,7 +208,7 @@ class NativePHP {
     }, delay);
   }
 
-  private killChildProcesses = () => {
+  private killChildProcesses() {
     this.processes
       .filter((p) => p !== undefined)
       .forEach((process) => {
@@ -204,20 +218,6 @@ class NativePHP {
           console.error(err);
         }
       });
-  };
-
-  private async loadPhpIni() {
-    let config = {};
-
-    try {
-      const result = await retrievePhpIniSettings();
-
-      config = JSON.parse(result.stdout);
-    } catch (error) {
-      console.error(error);
-    }
-
-    return config;
   }
 }
 
