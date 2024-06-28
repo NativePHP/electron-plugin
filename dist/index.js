@@ -23,18 +23,6 @@ class NativePHP {
     constructor() {
         this.processes = [];
         this.schedulerInterval = undefined;
-        this.killChildProcesses = () => {
-            this.processes
-                .filter((p) => p !== undefined)
-                .forEach((process) => {
-                try {
-                    ps_node_1.default.kill(process.pid);
-                }
-                catch (err) {
-                    console.error(err);
-                }
-            });
-        };
     }
     bootstrap(app, icon, phpBinary, cert) {
         require("@electron/remote/main").initialize();
@@ -145,6 +133,19 @@ class NativePHP {
             console.log("Electron API server started on port", electronApi.port);
         });
     }
+    loadPhpIni() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let config = {};
+            try {
+                const result = yield (0, server_1.retrievePhpIniSettings)();
+                config = JSON.parse(result.stdout);
+            }
+            catch (error) {
+                console.error(error);
+            }
+            return config;
+        });
+    }
     startPhpApp() {
         return __awaiter(this, void 0, void 0, function* () {
             this.processes.push(yield (0, server_1.startPhpApp)());
@@ -172,17 +173,16 @@ class NativePHP {
             }, 60 * 1000);
         }, delay);
     }
-    loadPhpIni() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let config = {};
+    killChildProcesses() {
+        this.processes
+            .filter((p) => p !== undefined)
+            .forEach((process) => {
             try {
-                const result = yield (0, server_1.retrievePhpIniSettings)();
-                config = JSON.parse(result.stdout);
+                ps_node_1.default.kill(process.pid);
             }
-            catch (error) {
-                console.error(error);
+            catch (err) {
+                console.error(err);
             }
-            return config;
         });
     }
 }
