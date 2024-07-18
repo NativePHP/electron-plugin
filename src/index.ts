@@ -1,36 +1,32 @@
-import type CrossProcessExports from 'electron'
-import { autoUpdater } from "electron-updater"
-import state from './server/state'
-import {electronApp, optimizer, is} from '@electron-toolkit/utils'
-import {startAPI, runScheduler, servePhpApp, serveWebsockets, retrieveNativePHPConfig, retrievePhpIniSettings} from './server'
-import {notifyLaravel} from "./server/utils";
-import { app, BrowserWindow } from "electron";
+import type CrossProcessExports from "electron";
+import { app } from "electron";
+import { autoUpdater } from "electron-updater";
+import state from "./server/state";
+import { electronApp, optimizer } from "@electron-toolkit/utils";
+import {
+  retrieveNativePHPConfig,
+  retrievePhpIniSettings,
+  runScheduler,
+  startAPI,
+  startPhpApp,
+  startQueue,
+  startWebsockets,
+} from "./server";
+import { notifyLaravel } from "./server/utils";
 import { resolve } from "path";
-import ps from 'ps-node'
-
-let phpProcesses = [];
-let websocketProcess;
-let schedulerInterval;
-
-
-const killChildProcesses = () => {
-  let processes = [
-    ...phpProcesses,
-    websocketProcess,
-  ].filter((p) => p !== undefined);
-
-  processes.forEach((process) => {
-    try {
-      ps.kill(process.pid);
-    } catch (err) {
-      console.error(err);
-    }
-  });
-}
+import ps from "ps-node";
 
 class NativePHP {
-  public bootstrap(app: CrossProcessExports.App, icon: string, phpBinary: string, cert: string) {
-    require('@electron/remote/main').initialize();
+  processes = [];
+  schedulerInterval = undefined;
+
+  public bootstrap(
+    app: CrossProcessExports.App,
+    icon: string,
+    phpBinary: string,
+    cert: string
+  ) {
+    require("@electron/remote/main").initialize();
 
     state.icon = icon;
     state.php = phpBinary;
@@ -38,134 +34,191 @@ class NativePHP {
 
     this.bootstrapApp(app);
     this.addEventListeners(app);
-    this.addTerminateListeners(app);
   }
-
 
   private addEventListeners(app: Electron.CrossProcessExports.App) {
-    app.on('open-url', (event, url) => {
-      notifyLaravel('events', {
-        event: '\\Native\\Laravel\\Events\\App\\OpenedFromURL',
-        payload: [url]
-      })
-    })
-
-    app.on('open-file', (event, path) => {
-      notifyLaravel('events', {
-        event: '\\Native\\Laravel\\Events\\App\\OpenFile',
-        payload: [path]
-      })
+    app.on("open-url", (event, url) => {
+      notifyLaravel("events", {
+        event: "\\Native\\Laravel\\Events\\App\\OpenedFromURL",
+        payload: [url],
+      });
     });
 
-    app.on('window-all-closed', () => {
-      if (process.platform !== 'darwin') {
-        app.quit()
-      }
-    })
-  }
-
-  private addTerminateListeners(app: Electron.CrossProcessExports.App) {
-    app.on('before-quit', (e) => {
-      if (schedulerInterval) {
-        clearInterval(schedulerInterval);
-      }
-
-      killChildProcesses();
+    app.on("open-file", (event, path) => {
+      notifyLaravel("events", {
+        event: "\\Native\\Laravel\\Events\\App\\OpenFile",
+        payload: [path],
+      });
     });
-  }
 
-  private bootstrapApp(app: Electron.CrossProcessExports.App) {
-    let nativePHPConfig = {};
-
-    // Wait for promise to resolve
-    retrieveNativePHPConfig().then((result) => {
-      try {
-        nativePHPConfig = JSON.parse(result.stdout);
-      } catch (e) {
-        console.error(e);
+    app.on("window-all-closed", () => {
+      if (process.platform !== "darwin") {
+        app.quit();
       }
-    }).catch((err) => {
-      console.error(err);
-    }).finally(() => {
-      this.setupApp(nativePHPConfig);
+    });
+
+    app.on("before-quit", () => {
+      if (this.schedulerInterval) {
+        clearInterval(this.schedulerInterval);
+      }
+
+      this.killChildProcesses();
+    });
+
+    // Default open or close DevTools by F12 in development
+    // and ignore CommandOrControl + R in production.
+    // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+    app.on("browser-window-created", (_, window) => {
+      optimizer.watchWindowShortcuts(window);
+    });
+
+    app.on("activate", function (event, hasVisibleWindows) {
+      // On macOS it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      if (!hasVisibleWindows) {
+        notifyLaravel("booted");
+      }
+
+      event.preventDefault();
     });
   }
 
-  private setupApp(nativePHPConfig: any) {
-    app.whenReady().then(async () => {
+  private async bootstrapApp(app: Electron.CrossProcessExports.App) {
+    await app.whenReady();
 
-      // Only run this on macOS
-      if (process.platform === 'darwin' && process.env.NODE_ENV === 'development') {
-        app.dock.setIcon(state.icon)
-      }
+    const config = await this.loadConfig();
 
-      // Default open or close DevTools by F12 in development
-      // and ignore CommandOrControl + R in production.
-      // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-      app.on('browser-window-created', (_, window) => {
-        optimizer.watchWindowShortcuts(window)
-      })
+    this.setDockIcon();
+    this.setAppUserModelId(config);
+    this.setDeepLinkHandler(config);
+    this.startAutoUpdater(config);
 
-      let phpIniSettings = {};
-      try {
-        let { stdout } = await retrievePhpIniSettings()
-        phpIniSettings = JSON.parse(stdout);
-      } catch (e) {
-        console.error(e);
-      }
+    await this.startElectronApi();
 
-      // @ts-ignore
-      electronApp.setAppUserModelId(nativePHPConfig?.app_id)
+    state.phpIni = await this.loadPhpIni();
 
-      // @ts-ignore
-      const deepLinkProtocol = nativePHPConfig?.deeplink_scheme;
-      if (deepLinkProtocol) {
-        if (process.defaultApp) {
-          if (process.argv.length >= 2) {
-            app.setAsDefaultProtocolClient(deepLinkProtocol, process.execPath, [resolve(process.argv[1])])
-          }
-        } else {
-          app.setAsDefaultProtocolClient(deepLinkProtocol)
+    await this.startPhpApp();
+    await this.startQueueWorker();
+    await this.startWebsockets();
+    this.startScheduler();
+
+    await notifyLaravel("booted");
+  }
+
+  private async loadConfig() {
+    let config = {};
+
+    try {
+      const result = await retrieveNativePHPConfig();
+
+      config = JSON.parse(result.stdout);
+    } catch (error) {
+      console.error(error);
+    }
+
+    return config;
+  }
+
+  private setDockIcon() {
+    // Only run this on macOS
+    if (
+      process.platform === "darwin" &&
+      process.env.NODE_ENV === "development"
+    ) {
+      app.dock.setIcon(state.icon);
+    }
+  }
+
+  private setAppUserModelId(config) {
+    electronApp.setAppUserModelId(config?.app_id);
+  }
+
+  private setDeepLinkHandler(config) {
+    const deepLinkProtocol = config?.deeplink_scheme;
+
+    if (deepLinkProtocol) {
+      if (process.defaultApp) {
+        if (process.argv.length >= 2) {
+          app.setAsDefaultProtocolClient(deepLinkProtocol, process.execPath, [
+            resolve(process.argv[1]),
+          ]);
         }
+      } else {
+        app.setAsDefaultProtocolClient(deepLinkProtocol);
       }
+    }
+  }
 
-      // Start PHP server and websockets
-      const apiPort = await startAPI()
-      console.log('API server started on port', apiPort.port);
+  private startAutoUpdater(config) {
+    if (config?.updater?.enabled === true) {
+      autoUpdater.checkForUpdatesAndNotify();
+    }
+  }
 
-      phpProcesses = await servePhpApp(apiPort.port, phpIniSettings)
+  private async startElectronApi() {
+    // Start an Express server so that the Electron app can be controlled from PHP via API
+    const electronApi = await startAPI();
 
-      websocketProcess = serveWebsockets()
+    state.electronApiPort = electronApi.port;
 
-      await notifyLaravel('booted')
+    console.log("Electron API server started on port", electronApi.port);
+  }
 
-      // @ts-ignore
-      if (nativePHPConfig?.updater?.enabled === true) {
-        autoUpdater.checkForUpdatesAndNotify()
-      }
+  private async loadPhpIni() {
+    let config = {};
 
-      let now = new Date();
-      let delay = (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
+    try {
+      const result = await retrievePhpIniSettings();
 
-      setTimeout(() => {
-        console.log("Running scheduler...")
-        runScheduler(apiPort.port, phpIniSettings);
-        schedulerInterval = setInterval(() => {
-          console.log("Running scheduler...")
-          runScheduler(apiPort.port, phpIniSettings);
-        }, 60 * 1000);
-      }, delay);
+      config = JSON.parse(result.stdout);
+    } catch (error) {
+      console.error(error);
+    }
 
-      app.on('activate', function(event, hasVisibleWindows) {
-        // On macOS it's common to re-create a window in the app when the
-        // dock icon is clicked and there are no other windows open.
-        if (!hasVisibleWindows) {
-          notifyLaravel('booted')
+    return config;
+  }
+
+  private async startPhpApp() {
+    this.processes.push(await startPhpApp());
+  }
+
+  private async startQueueWorker() {
+    this.processes.push(await startQueue());
+  }
+
+  private async startWebsockets() {
+    this.processes.push(await startWebsockets());
+  }
+
+  private startScheduler() {
+    const now = new Date();
+    const delay =
+      (60 - now.getSeconds()) * 1000 + (1000 - now.getMilliseconds());
+
+    setTimeout(() => {
+      console.log("Running scheduler...");
+
+      runScheduler();
+
+      this.schedulerInterval = setInterval(() => {
+        console.log("Running scheduler...");
+
+        runScheduler();
+      }, 60 * 1000);
+    }, delay);
+  }
+
+  private killChildProcesses() {
+    this.processes
+      .filter((p) => p !== undefined)
+      .forEach((process) => {
+        try {
+          ps.kill(process.pid);
+        } catch (err) {
+          console.error(err);
         }
-        event.preventDefault();
-      })
-    });
+      });
   }
 }
 
-export = new NativePHP()
+export = new NativePHP();
