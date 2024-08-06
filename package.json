@@ -27,7 +27,7 @@
     "body-parser": "^1.20.2",
     "electron-context-menu": "^3.6.1",
     "electron-store": "^8.1.0",
-    "electron-updater": "^5.3.0",
+    "electron-updater": "^6.2.1",
     "electron-window-state": "^5.0.3",
     "express": "^4.18.2",
     "fs-extra": "^11.1.1",
