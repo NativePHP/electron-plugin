@@ -108,6 +108,7 @@ router.post('/open', (req, res) => {
         transparency,
         showDevTools,
         fullscreen,
+        fullscreenable,
         kiosk,
         autoHideMenuBar,
     } = req.body
@@ -166,6 +167,7 @@ router.post('/open', (req, res) => {
             nodeIntegration: true,
         },
         fullscreen,
+        fullscreenable,
         kiosk,
     })
 
