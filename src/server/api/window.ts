@@ -13,6 +13,13 @@ router.post('/maximize', (req, res) => {
     res.sendStatus(200)
 });
 
+router.post('/minimize', (req, res) => {
+  const {id} = req.body
+  state.windows[id]?.minimize()
+
+  res.sendStatus(200)
+});
+
 router.post('/resize', (req, res) => {
     const {id, width, height} = req.body
 
