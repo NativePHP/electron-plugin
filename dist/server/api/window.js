@@ -16,6 +16,12 @@ router.post('/maximize', (req, res) => {
     (_a = state_1.default.windows[id]) === null || _a === void 0 ? void 0 : _a.maximize();
     res.sendStatus(200);
 });
+router.post('/minimize', (req, res) => {
+    var _a;
+    const { id } = req.body;
+    (_a = state_1.default.windows[id]) === null || _a === void 0 ? void 0 : _a.minimize();
+    res.sendStatus(200);
+});
 router.post('/resize', (req, res) => {
     var _a;
     const { id, width, height } = req.body;
@@ -69,7 +75,7 @@ router.post('/always-on-top', (req, res) => {
     res.sendStatus(200);
 });
 router.post('/open', (req, res) => {
-    let { id, x, y, frame, width, height, minWidth, minHeight, maxWidth, maxHeight, focusable, hasShadow, url, resizable, movable, minimizable, maximizable, closable, title, alwaysOnTop, titleBarStyle, trafficLightPosition, vibrancy, backgroundColor, transparency, showDevTools, fullscreen, kiosk, autoHideMenuBar, } = req.body;
+    let { id, x, y, frame, width, height, minWidth, minHeight, maxWidth, maxHeight, focusable, hasShadow, url, resizable, movable, minimizable, maximizable, closable, title, alwaysOnTop, titleBarStyle, trafficLightPosition, vibrancy, backgroundColor, transparency, showDevTools, fullscreen, fullscreenable, kiosk, autoHideMenuBar, } = req.body;
     if (state_1.default.windows[id]) {
         state_1.default.windows[id].show();
         state_1.default.windows[id].focus();
@@ -104,6 +110,7 @@ router.post('/open', (req, res) => {
             contextIsolation: false,
             nodeIntegration: true,
         }, fullscreen,
+        fullscreenable,
         kiosk }));
     if ((process.env.NODE_ENV === 'development' || showDevTools === true) && showDevTools !== false) {
         window.webContents.openDevTools();
