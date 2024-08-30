@@ -9,7 +9,7 @@ router.get('/get-system-idle-state', (req, res) => {
     })
 });
 
-router.post('/get-system-idle-time', (req, res) => {
+router.get('/get-system-idle-time', (req, res) => {
     res.json({
         result: powerMonitor.getSystemIdleTime(),
     })
