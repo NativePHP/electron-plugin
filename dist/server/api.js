@@ -33,6 +33,7 @@ const contextMenu_1 = __importDefault(require("./api/contextMenu"));
 const settings_1 = __importDefault(require("./api/settings"));
 const shell_1 = __importDefault(require("./api/shell"));
 const progressBar_1 = __importDefault(require("./api/progressBar"));
+const powerMonitor_1 = __importDefault(require("./api/powerMonitor"));
 function startAPIServer(randomSecret) {
     return __awaiter(this, void 0, void 0, function* () {
         const port = yield (0, get_port_1.default)({
@@ -58,6 +59,7 @@ function startAPIServer(randomSecret) {
             httpServer.use("/api/context", contextMenu_1.default);
             httpServer.use("/api/menu-bar", menuBar_1.default);
             httpServer.use("/api/progress-bar", progressBar_1.default);
+            httpServer.use("/api/power-monitor", powerMonitor_1.default);
             if (process.env.NODE_ENV === "development") {
                 httpServer.use("/api/debug", debug_1.default);
             }

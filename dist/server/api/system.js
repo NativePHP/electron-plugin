@@ -31,6 +31,35 @@ router.post('/prompt-touch-id', (req, res) => __awaiter(void 0, void 0, void 0, 
         });
     }
 }));
+router.get('/can-encrypt', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.json({
+        result: yield electron_1.safeStorage.isEncryptionAvailable(),
+    });
+}));
+router.post('/encrypt', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        res.json({
+            result: yield electron_1.safeStorage.encryptString(req.body.string).toString('base64'),
+        });
+    }
+    catch (e) {
+        res.status(400).json({
+            error: e.message,
+        });
+    }
+}));
+router.post('/decrypt', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        res.json({
+            result: yield electron_1.safeStorage.decryptString(Buffer.from(req.body.string, 'base64')),
+        });
+    }
+    catch (e) {
+        res.status(400).json({
+            error: e.message,
+        });
+    }
+}));
 router.get('/printers', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const printers = yield electron_1.BrowserWindow.getAllWindows()[0].webContents.getPrintersAsync();
     res.json({
