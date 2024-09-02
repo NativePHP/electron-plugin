@@ -1,6 +1,6 @@
 {
   "name": "@nativephp/electron-plugin",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "NativePHP Electron support",
   "license": "MIT",
   "funding": [
