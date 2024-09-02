@@ -30,7 +30,7 @@ router.get('/can-encrypt', async (req, res) => {
 router.post('/encrypt', async (req, res) => {
     try {
         res.json({
-            result: await safeStorage.encryptString(req.body.string),
+            result: await safeStorage.encryptString(req.body.string).toString('base64'),
         });
     } catch (e) {
         res.status(400).json({
@@ -42,7 +42,7 @@ router.post('/encrypt', async (req, res) => {
 router.post('/decrypt', async (req, res) => {
     try {
         res.json({
-            result: await safeStorage.decryptString(req.body.string),
+            result: await safeStorage.decryptString(Buffer.from(req.body.string, 'base64')),
         });
     } catch (e) {
         res.status(400).json({
