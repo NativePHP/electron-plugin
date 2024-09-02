@@ -1,5 +1,5 @@
 import express from 'express'
-import {BrowserWindow, systemPreferences} from 'electron'
+import {BrowserWindow, systemPreferences, safeStorage} from 'electron';
 const router = express.Router();
 
 router.get('/can-prompt-touch-id', (req, res) => {
@@ -19,6 +19,37 @@ router.post('/prompt-touch-id', async (req, res) => {
         })
     }
 });
+
+router.get('/can-encrypt', async (req, res) => {
+    res.json({
+        result: await safeStorage.isEncryptionAvailable(),
+    });
+});
+
+router.post('/encrypt', async (req, res) => {
+    try {
+        res.json({
+            result: await safeStorage.encryptString(req.body.string),
+        });
+    } catch (e) {
+        res.status(400).json({
+            error: e.message,
+        });
+    }
+});
+
+router.post('/decrypt', async (req, res) => {
+    try {
+        res.json({
+            result: await safeStorage.decryptString(req.body.string),
+        });
+    } catch (e) {
+        res.status(400).json({
+            error: e.message,
+        });
+    }
+});
+
 router.get('/printers', async (req, res) => {
   const printers = await BrowserWindow.getAllWindows()[0].webContents.getPrintersAsync();
 
