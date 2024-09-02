@@ -20,6 +20,7 @@ import contextMenuRoutes from "./api/contextMenu";
 import settingsRoutes from "./api/settings";
 import shellRoutes from "./api/shell";
 import progressBarRoutes from "./api/progressBar";
+import powerMonitorRoutes from "./api/powerMonitor";
 import { Server } from "net";
 
 export interface APIProcess {
@@ -52,6 +53,7 @@ async function startAPIServer(randomSecret: string): Promise<APIProcess> {
     httpServer.use("/api/context", contextMenuRoutes);
     httpServer.use("/api/menu-bar", menuBarRoutes);
     httpServer.use("/api/progress-bar", progressBarRoutes);
+    httpServer.use("/api/power-monitor", powerMonitorRoutes);
 
     if (process.env.NODE_ENV === "development") {
       httpServer.use("/api/debug", debugRoutes);
