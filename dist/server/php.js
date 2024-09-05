@@ -187,7 +187,11 @@ function serveApp(secret, apiPort, phpIniSettings) {
             console.log('You may migrate manually by running: php artisan native:migrate');
         }
         const phpPort = yield getPhpPort();
-        const serverPath = (0, path_1.join)(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
+        let serverPath = (0, path_1.join)(appPath, 'build', '__nativephp_app_bundle');
+        if (process.env.NODE_ENV !== 'production' || !(0, fs_1.existsSync)(serverPath)) {
+            console.log('* * * Building with source * * *');
+            serverPath = (0, path_1.join)(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
+        }
         const phpServer = callPhp(['-S', `127.0.0.1:${phpPort}`, serverPath], {
             cwd: (0, path_1.join)(appPath, 'public'),
             env

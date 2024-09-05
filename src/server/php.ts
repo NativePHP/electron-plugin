@@ -217,7 +217,13 @@ function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
 
         const phpPort = await getPhpPort();
 
-        const serverPath = join(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php')
+        let serverPath = join(appPath, 'build', '__nativephp_app_bundle');
+
+        if (process.env.NODE_ENV !== 'production' || ! existsSync(serverPath)) {
+            console.log('* * * Building with source * * *');
+            serverPath = join(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
+        }
+
         const phpServer = callPhp(['-S', `127.0.0.1:${phpPort}`, serverPath], {
             cwd: join(appPath, 'public'),
             env
