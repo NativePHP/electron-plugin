@@ -13,7 +13,7 @@ router.get('/text', (req, res) => {
         text: clipboard.readText(type || DEFAULT_TYPE)
     })
 
-    proceedToNotification(ClipboardEvents.Read, ClipboardContentTypes.Text)
+    forwardToLaravel(ClipboardEvents.Read, ClipboardContentTypes.Text)
 });
 
 router.post('/text', (req, res) => {
@@ -27,7 +27,7 @@ router.post('/text', (req, res) => {
         text,
     })
 
-    proceedToNotification(ClipboardEvents.Written, ClipboardContentTypes.Text)
+    forwardToLaravel(ClipboardEvents.Write, ClipboardContentTypes.Text)
 });
 
 router.get('/html', (req, res) => {
@@ -38,7 +38,7 @@ router.get('/html', (req, res) => {
         html: clipboard.readHTML(type || DEFAULT_TYPE)
     })
 
-    proceedToNotification(ClipboardEvents.Read, ClipboardContentTypes.Html)
+    forwardToLaravel(ClipboardEvents.Read, ClipboardContentTypes.Html)
 });
 
 router.post('/html', (req, res) => {
@@ -51,7 +51,7 @@ router.post('/html', (req, res) => {
       html,
     })
 
-    proceedToNotification(ClipboardEvents.Written, ClipboardContentTypes.Html)
+    forwardToLaravel(ClipboardEvents.Write, ClipboardContentTypes.Html)
 });
 
 router.get('/image', (req, res) => {
@@ -63,7 +63,7 @@ router.get('/image', (req, res) => {
         image: image.isEmpty() ? null : image.toDataURL()
     })
 
-    proceedToNotification(ClipboardEvents.Read, ClipboardContentTypes.Image)
+    forwardToLaravel(ClipboardEvents.Read, ClipboardContentTypes.Image)
 });
 
 router.post('/image', (req, res) => {
@@ -83,7 +83,7 @@ router.post('/image', (req, res) => {
 
     res.sendStatus(200);
 
-    proceedToNotification(ClipboardEvents.Written, ClipboardContentTypes.Image)
+    forwardToLaravel(ClipboardEvents.Write, ClipboardContentTypes.Image)
 });
 
 router.delete('/', (req, res) => {
@@ -95,7 +95,7 @@ router.delete('/', (req, res) => {
     res.sendStatus(200);
 });
 
-function proceedToNotification(eventType: ClipboardEvents, contentType: ClipboardContentTypes) {
+function forwardToLaravel(eventType: ClipboardEvents, contentType: ClipboardContentTypes) {
   notifyLaravel("events", {
     event: `\\Native\\Laravel\\Events\\Clipboard\\${eventType}`,
     payload: {

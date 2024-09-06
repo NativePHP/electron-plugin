@@ -26,12 +26,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express = __importStar(require("express"));
 const router = express.Router();
 const electron_1 = require("electron");
+const utils_1 = require("../utils");
 const DEFAULT_TYPE = 'clipboard';
 router.get('/text', (req, res) => {
     const { type } = req.query;
     res.json({
         text: electron_1.clipboard.readText(type || DEFAULT_TYPE)
     });
+    forwardToLaravel(ClipboardEvents.Read, ClipboardContentTypes.Text);
 });
 router.post('/text', (req, res) => {
     const { text } = req.body;
@@ -40,12 +42,14 @@ router.post('/text', (req, res) => {
     res.json({
         text,
     });
+    forwardToLaravel(ClipboardEvents.Write, ClipboardContentTypes.Text);
 });
 router.get('/html', (req, res) => {
     const { type } = req.query;
     res.json({
         html: electron_1.clipboard.readHTML(type || DEFAULT_TYPE)
     });
+    forwardToLaravel(ClipboardEvents.Read, ClipboardContentTypes.Html);
 });
 router.post('/html', (req, res) => {
     const { html } = req.body;
@@ -54,6 +58,7 @@ router.post('/html', (req, res) => {
     res.json({
         html,
     });
+    forwardToLaravel(ClipboardEvents.Write, ClipboardContentTypes.Html);
 });
 router.get('/image', (req, res) => {
     const { type } = req.query;
@@ -61,6 +66,7 @@ router.get('/image', (req, res) => {
     res.json({
         image: image.isEmpty() ? null : image.toDataURL()
     });
+    forwardToLaravel(ClipboardEvents.Read, ClipboardContentTypes.Image);
 });
 router.post('/image', (req, res) => {
     const { image } = req.body;
@@ -76,10 +82,19 @@ router.post('/image', (req, res) => {
         return;
     }
     res.sendStatus(200);
+    forwardToLaravel(ClipboardEvents.Write, ClipboardContentTypes.Image);
 });
 router.delete('/', (req, res) => {
     const { type } = req.query;
     electron_1.clipboard.clear(type || DEFAULT_TYPE);
     res.sendStatus(200);
 });
+function forwardToLaravel(eventType, contentType) {
+    (0, utils_1.notifyLaravel)("events", {
+        event: `\\Native\\Laravel\\Events\\Clipboard\\${eventType}`,
+        payload: {
+            contentType
+        }
+    });
+}
 exports.default = router;
