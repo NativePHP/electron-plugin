@@ -53,6 +53,10 @@ async function retrieveNativePHPConfig() {
 }
 
 function callPhp(args, options, phpIniSettings = {}) {
+    if (args[0] === 'artisan' && runningSecureBuild()) {
+        args.unshift(join(appPath, 'build', '__nativephp_app_bundle'));
+    }
+
     let defaultIniSettings = {
       'memory_limit': '512M',
       'curl.cainfo': state.caCert,
@@ -186,7 +190,7 @@ function getDefaultEnvironmentVariables(secret, apiPort) {
 }
 
 function runningSecureBuild() {
-
+    return existsSync(join(appPath, 'build', '__nativephp_app_bundle'))
 }
 
 function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
@@ -210,9 +214,9 @@ function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
 
         // Make sure the storage path is linked - as people can move the app around, we
         // need to run this every time the app starts
-        // if (! runningSecureBuild()) {
-        //     callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings)
-        // }
+        if (! runningSecureBuild()) {
+            callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings)
+        }
 
         // Migrate the database
         if (store.get('migrated_version') !== app.getVersion() && process.env.NODE_ENV !== 'development') {
@@ -230,7 +234,7 @@ function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
 
         let serverPath = join(appPath, 'build', '__nativephp_app_bundle');
 
-        // if (process.env.NODE_ENV !== 'production' || ! existsSync(serverPath)) {
+        // if (process.env.NODE_ENV !== 'production' || ! runningSecureBuild()) {
         //     console.log('* * * Running from source * * *');
         //     serverPath = join(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
         // }
