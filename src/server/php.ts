@@ -65,6 +65,10 @@ function callPhp(args, options, phpIniSettings = {}) {
       args.unshift('-d', `${key}=${iniSettings[key]}`);
     });
 
+    if (parseInt(process.env.SHELL_VERBOSITY) > 0) {
+        console.log('Calling PHP', state.php, args)
+    }
+
     return spawn(
         state.php,
         args,
@@ -180,6 +184,10 @@ function getDefaultEnvironmentVariables(secret, apiPort) {
   };
 }
 
+function runningSecureBuild() {
+
+}
+
 function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
     return new Promise(async (resolve, reject) => {
         const appPath = getAppPath();
@@ -201,7 +209,7 @@ function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
 
         // Make sure the storage path is linked - as people can move the app around, we
         // need to run this every time the app starts
-        callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings)
+        // callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings)
 
         // Migrate the database
         if (store.get('migrated_version') !== app.getVersion() && process.env.NODE_ENV !== 'development') {
@@ -219,10 +227,10 @@ function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
 
         let serverPath = join(appPath, 'build', '__nativephp_app_bundle');
 
-        if (process.env.NODE_ENV !== 'production' || ! existsSync(serverPath)) {
-            console.log('* * * Building with source * * *');
-            serverPath = join(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
-        }
+        // if (process.env.NODE_ENV !== 'production' || ! existsSync(serverPath)) {
+        //     console.log('* * * Running from source * * *');
+        //     serverPath = join(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
+        // }
 
         const phpServer = callPhp(['-S', `127.0.0.1:${phpPort}`, serverPath], {
             cwd: join(appPath, 'public'),

@@ -75,6 +75,9 @@ function callPhp(args, options, phpIniSettings = {}) {
     Object.keys(iniSettings).forEach(key => {
         args.unshift('-d', `${key}=${iniSettings[key]}`);
     });
+    if (parseInt(process.env.SHELL_VERBOSITY) > 0) {
+        console.log('Calling PHP', state_1.default.php, args);
+    }
     return (0, child_process_1.spawn)(state_1.default.php, args, {
         cwd: options.cwd,
         env: Object.assign(Object.assign({}, process.env), options.env),
@@ -164,6 +167,8 @@ function getDefaultEnvironmentVariables(secret, apiPort) {
         NATIVEPHP_RECENT_PATH: getPath('recent'),
     };
 }
+function runningSecureBuild() {
+}
 function serveApp(secret, apiPort, phpIniSettings) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const appPath = getAppPath();
@@ -176,7 +181,6 @@ function serveApp(secret, apiPort, phpIniSettings) {
             env
         };
         const store = new electron_store_1.default();
-        callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings);
         if (store.get('migrated_version') !== electron_1.app.getVersion() && process.env.NODE_ENV !== 'development') {
             console.log('Migrating database...');
             callPhp(['artisan', 'migrate', '--force'], phpOptions, phpIniSettings);
@@ -188,10 +192,6 @@ function serveApp(secret, apiPort, phpIniSettings) {
         }
         const phpPort = yield getPhpPort();
         let serverPath = (0, path_1.join)(appPath, 'build', '__nativephp_app_bundle');
-        if (process.env.NODE_ENV !== 'production' || !(0, fs_1.existsSync)(serverPath)) {
-            console.log('* * * Building with source * * *');
-            serverPath = (0, path_1.join)(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
-        }
         const phpServer = callPhp(['-S', `127.0.0.1:${phpPort}`, serverPath], {
             cwd: (0, path_1.join)(appPath, 'public'),
             env
