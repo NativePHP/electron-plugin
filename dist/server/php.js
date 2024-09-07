@@ -46,7 +46,11 @@ function retrievePhpIniSettings() {
             cwd: appPath,
             env
         };
-        return yield (0, util_1.promisify)(child_process_1.execFile)(state_1.default.php, ['artisan', 'native:php-ini'], phpOptions);
+        let command = ['artisan', 'native:php-ini'];
+        if (runningSecureBuild()) {
+            command.unshift((0, path_1.join)(appPath, 'build', '__nativephp_app_bundle'));
+        }
+        return yield (0, util_1.promisify)(child_process_1.execFile)(state_1.default.php, command, phpOptions);
     });
 }
 exports.retrievePhpIniSettings = retrievePhpIniSettings;
@@ -61,7 +65,11 @@ function retrieveNativePHPConfig() {
             cwd: appPath,
             env
         };
-        return yield (0, util_1.promisify)(child_process_1.execFile)(state_1.default.php, ['artisan', 'native:config'], phpOptions);
+        let command = ['artisan', 'native:config'];
+        if (runningSecureBuild()) {
+            command.unshift((0, path_1.join)(appPath, 'build', '__nativephp_app_bundle'));
+        }
+        return yield (0, util_1.promisify)(child_process_1.execFile)(state_1.default.php, command, phpOptions);
     });
 }
 exports.retrieveNativePHPConfig = retrieveNativePHPConfig;

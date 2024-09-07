@@ -23,18 +23,24 @@ async function getPhpPort() {
 }
 
 async function retrievePhpIniSettings() {
-  const env = {
-    NATIVEPHP_RUNNING: 'true',
-    NATIVEPHP_STORAGE_PATH: storagePath,
-    NATIVEPHP_DATABASE_PATH: databaseFile,
-  };
+    const env = {
+        NATIVEPHP_RUNNING: 'true',
+        NATIVEPHP_STORAGE_PATH: storagePath,
+        NATIVEPHP_DATABASE_PATH: databaseFile,
+    };
 
-  const phpOptions = {
-    cwd: appPath,
-    env
-  };
+    const phpOptions = {
+        cwd: appPath,
+        env
+    };
 
-  return await promisify(execFile)(state.php, ['artisan', 'native:php-ini'], phpOptions);
+    let command = ['artisan', 'native:php-ini'];
+
+    if (runningSecureBuild()) {
+        command.unshift(join(appPath, 'build', '__nativephp_app_bundle'));
+    }
+
+    return await promisify(execFile)(state.php, command, phpOptions);
 }
 
 async function retrieveNativePHPConfig() {
@@ -49,7 +55,13 @@ async function retrieveNativePHPConfig() {
         env
     };
 
-    return await promisify(execFile)(state.php, ['artisan', 'native:config'], phpOptions);
+    let command = ['artisan', 'native:config'];
+
+    if (runningSecureBuild()) {
+        command.unshift(join(appPath, 'build', '__nativephp_app_bundle'));
+    }
+
+    return await promisify(execFile)(state.php, command, phpOptions);
 }
 
 function callPhp(args, options, phpIniSettings = {}) {
