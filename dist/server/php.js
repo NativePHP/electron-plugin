@@ -195,12 +195,12 @@ function serveApp(secret, apiPort, phpIniSettings) {
         if (!runningSecureBuild()) {
             callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings);
         }
-        if (store.get('migrated_version') !== electron_1.app.getVersion() && process.env.NODE_ENV !== 'development') {
+        if (store.get('migrated_version') !== electron_1.app.getVersion() && (process.env.NODE_ENV !== 'development' || runningSecureBuild())) {
             console.log('Migrating database...');
             callPhp(['artisan', 'migrate', '--force'], phpOptions, phpIniSettings);
             store.set('migrated_version', electron_1.app.getVersion());
         }
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === 'development' && !runningSecureBuild()) {
             console.log('Skipping Database migration while in development.');
             console.log('You may migrate manually by running: php artisan native:migrate');
         }

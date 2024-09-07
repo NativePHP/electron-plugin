@@ -231,13 +231,13 @@ function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
         }
 
         // Migrate the database
-        if (store.get('migrated_version') !== app.getVersion() && process.env.NODE_ENV !== 'development') {
+        if (store.get('migrated_version') !== app.getVersion() && (process.env.NODE_ENV !== 'development' || runningSecureBuild())) {
             console.log('Migrating database...')
             callPhp(['artisan', 'migrate', '--force'], phpOptions, phpIniSettings)
             store.set('migrated_version', app.getVersion())
         }
 
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === 'development' && ! runningSecureBuild()) {
             console.log('Skipping Database migration while in development.')
             console.log('You may migrate manually by running: php artisan native:migrate')
         }
