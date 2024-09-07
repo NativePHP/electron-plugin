@@ -166,6 +166,7 @@ function getDefaultEnvironmentVariables(secret, apiPort) {
   return {
     APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
     APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
+    LARAVEL_STORAGE_PATH: storagePath,
     NATIVEPHP_STORAGE_PATH: storagePath,
     NATIVEPHP_DATABASE_PATH: databaseFile,
     NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
@@ -209,7 +210,9 @@ function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
 
         // Make sure the storage path is linked - as people can move the app around, we
         // need to run this every time the app starts
-        // callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings)
+        // if (! runningSecureBuild()) {
+        //     callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings)
+        // }
 
         // Migrate the database
         if (store.get('migrated_version') !== app.getVersion() && process.env.NODE_ENV !== 'development') {
