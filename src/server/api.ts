@@ -8,6 +8,7 @@ import appRoutes from "./api/app";
 import screenRoutes from "./api/screen";
 import dialogRoutes from "./api/dialog";
 import debugRoutes from "./api/debug";
+import broadcastingRoutes from "./api/broadcasting";
 import systemRoutes from "./api/system";
 import globalShortcutRoutes from "./api/globalShortcut";
 import notificationRoutes from "./api/notification";
@@ -54,6 +55,7 @@ async function startAPIServer(randomSecret: string): Promise<APIProcess> {
     httpServer.use("/api/menu-bar", menuBarRoutes);
     httpServer.use("/api/progress-bar", progressBarRoutes);
     httpServer.use("/api/power-monitor", powerMonitorRoutes);
+    httpServer.use("/api/broadcast", broadcastingRoutes);
 
     if (process.env.NODE_ENV === "development") {
       httpServer.use("/api/debug", debugRoutes);
