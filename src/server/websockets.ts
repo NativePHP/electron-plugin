@@ -4,7 +4,8 @@ import { spawn } from "child_process";
 import { getAppPath } from "./php";
 import state from "./state";
 
-function serveWebsockets() {
+
+function startWebsockets() {
   if (!existsSync(join(getAppPath(), 'vendor', 'laravel', 'reverb'))) {
     return;
   }
@@ -13,12 +14,10 @@ function serveWebsockets() {
     cwd: getAppPath()
   });
 
-  phpServer.stdout.on("data", (data) => {
-  });
+  phpServer.stdout.on("data", (data) => {});
 
-  phpServer.stderr.on("data", (data) => {
-  });
+  phpServer.stderr.on("data", (data) => {});
   return phpServer;
 }
 
-export default serveWebsockets;
+export default startWebsockets;

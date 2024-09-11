@@ -13,6 +13,13 @@ router.post('/maximize', (req, res) => {
     res.sendStatus(200)
 });
 
+router.post('/minimize', (req, res) => {
+  const {id} = req.body
+  state.windows[id]?.minimize()
+
+  res.sendStatus(200)
+});
+
 router.post('/resize', (req, res) => {
     const {id, width, height} = req.body
 
@@ -102,11 +109,13 @@ router.post('/open', (req, res) => {
         title,
         alwaysOnTop,
         titleBarStyle,
+        trafficLightPosition,
         vibrancy,
         backgroundColor,
         transparency,
         showDevTools,
         fullscreen,
+        fullscreenable,
         kiosk,
         autoHideMenuBar,
     } = req.body
@@ -151,6 +160,7 @@ router.post('/open', (req, res) => {
         closable,
         hasShadow,
         titleBarStyle,
+        trafficLightPosition,
         vibrancy,
         focusable,
         autoHideMenuBar,
@@ -164,6 +174,7 @@ router.post('/open', (req, res) => {
             nodeIntegration: true,
         },
         fullscreen,
+        fullscreenable,
         kiosk,
     })
 
