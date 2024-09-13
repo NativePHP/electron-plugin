@@ -9,7 +9,7 @@ export default {
             data.event = data.event.replace(/^(\\)+/, '');
 
             if(event === data.event) {
-                return callback(data.payload);
+                return callback(data.payload, event);
             }
         })
     }
