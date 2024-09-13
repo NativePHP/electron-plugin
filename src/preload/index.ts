@@ -1,6 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import * as remote from '@electron/remote'
 
+import Native from './native';
+
+// @ts-ignore
+window.Native = Native;
+
 // @ts-ignore
 window.remote = remote;
 
