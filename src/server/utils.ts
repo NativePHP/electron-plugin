@@ -30,6 +30,10 @@ export async function notifyLaravel(endpoint: string, payload = {}) {
     Object.values(state.windows).forEach(window => {
       window.webContents.send('native-event', payload);
     })
+
+    if (state.activeMenuBar?.window) {
+      state.activeMenuBar.window.webContents.send('native-event', payload)
+    }
   }
 }
 
