@@ -22,9 +22,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const remote = __importStar(require("@electron/remote"));
+const native_1 = __importDefault(require("./native"));
+window.Native = native_1.default;
 window.remote = remote;
 electron_1.ipcRenderer.on('log', (event, { level, message, context }) => {
     if (level === 'error') {

@@ -21,6 +21,7 @@ const app_1 = __importDefault(require("./api/app"));
 const screen_1 = __importDefault(require("./api/screen"));
 const dialog_1 = __importDefault(require("./api/dialog"));
 const debug_1 = __importDefault(require("./api/debug"));
+const broadcasting_1 = __importDefault(require("./api/broadcasting"));
 const system_1 = __importDefault(require("./api/system"));
 const globalShortcut_1 = __importDefault(require("./api/globalShortcut"));
 const notification_1 = __importDefault(require("./api/notification"));
@@ -60,6 +61,7 @@ function startAPIServer(randomSecret) {
             httpServer.use("/api/menu-bar", menuBar_1.default);
             httpServer.use("/api/progress-bar", progressBar_1.default);
             httpServer.use("/api/power-monitor", powerMonitor_1.default);
+            httpServer.use("/api/broadcast", broadcasting_1.default);
             if (process.env.NODE_ENV === "development") {
                 httpServer.use("/api/debug", debug_1.default);
             }

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.trimOptions = exports.notifyLaravel = exports.appendCookie = void 0;
+exports.trimOptions = exports.broadcastToWindows = exports.notifyLaravel = exports.appendCookie = void 0;
 const electron_1 = require("electron");
 const state_1 = __importDefault(require("./state"));
 const axios_1 = __importDefault(require("axios"));
@@ -39,13 +39,21 @@ function notifyLaravel(endpoint, payload = {}) {
         catch (e) {
         }
         if (endpoint === 'events') {
-            Object.values(state_1.default.windows).forEach(window => {
-                window.webContents.send('native-event', payload);
-            });
+            broadcastToWindows('native-event', payload);
         }
     });
 }
 exports.notifyLaravel = notifyLaravel;
+function broadcastToWindows(event, payload) {
+    var _a;
+    Object.values(state_1.default.windows).forEach(window => {
+        window.webContents.send(event, payload);
+    });
+    if ((_a = state_1.default.activeMenuBar) === null || _a === void 0 ? void 0 : _a.window) {
+        state_1.default.activeMenuBar.window.webContents.send(event, payload);
+    }
+}
+exports.broadcastToWindows = broadcastToWindows;
 function trimOptions(options) {
     Object.keys(options).forEach(key => options[key] == null && delete options[key]);
     return options;
