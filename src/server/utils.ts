@@ -27,10 +27,19 @@ export async function notifyLaravel(endpoint: string, payload = {}) {
   }
 
   if (endpoint === 'events') {
-    Object.values(state.windows).forEach(window => {
-      window.webContents.send('native-event', payload);
-    })
+    broadcastToWindows('native-event', payload);
   }
+}
+
+export function broadcastToWindows(event, payload) {
+
+    Object.values(state.windows).forEach(window => {
+        window.webContents.send(event, payload);
+    })
+
+    if (state.activeMenuBar?.window) {
+        state.activeMenuBar.window.webContents.send(event, payload)
+    }
 }
 
 /**
