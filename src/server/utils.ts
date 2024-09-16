@@ -12,6 +12,11 @@ export async function appendCookie() {
 }
 
 export async function notifyLaravel(endpoint: string, payload = {}) {
+
+  if (endpoint === 'events') {
+    broadcastToWindows('native-event', payload);
+  }
+
   try {
     await axios.post(
       `http://127.0.0.1:${state.phpPort}/_native/api/${endpoint}`,
@@ -24,10 +29,6 @@ export async function notifyLaravel(endpoint: string, payload = {}) {
     );
   } catch (e) {
     //
-  }
-
-  if (endpoint === 'events') {
-    broadcastToWindows('native-event', payload);
   }
 }
 
