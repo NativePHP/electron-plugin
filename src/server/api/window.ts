@@ -189,7 +189,6 @@ router.post('/open', (req, res) => {
     }
 
     window.on('blur', () => {
-        window.webContents.send('window:blur')
         notifyLaravel('events', {
           event: 'Native\\Laravel\\Events\\Windows\\WindowBlurred',
           payload: [id]
@@ -197,7 +196,6 @@ router.post('/open', (req, res) => {
     });
 
     window.on('focus', () => {
-        window.webContents.send('window:focus')
         notifyLaravel('events', {
             event: 'Native\\Laravel\\Events\\Windows\\WindowFocused',
             payload: [id]
