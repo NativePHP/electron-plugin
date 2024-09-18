@@ -21,7 +21,10 @@ ipcRenderer.on('log', (event, {level, message, context}) => {
 
 // Add Livewire event listeners
 ipcRenderer.on('native-event', (event, data) => {
-  
+
+  // Strip leading slashes
+  data.event = data.event.replace(/^(\\)+/, '');
+
   // add support for livewire 3
   // @ts-ignore
   if (window.Livewire) {
