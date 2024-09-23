@@ -46,7 +46,11 @@ function retrievePhpIniSettings() {
             cwd: appPath,
             env
         };
-        return yield (0, util_1.promisify)(child_process_1.execFile)(state_1.default.php, ['artisan', 'native:php-ini'], phpOptions);
+        let command = ['artisan', 'native:php-ini'];
+        if (runningSecureBuild()) {
+            command.unshift((0, path_1.join)(appPath, 'build', '__nativephp_app_bundle'));
+        }
+        return yield (0, util_1.promisify)(child_process_1.execFile)(state_1.default.php, command, phpOptions);
     });
 }
 exports.retrievePhpIniSettings = retrievePhpIniSettings;
@@ -61,11 +65,18 @@ function retrieveNativePHPConfig() {
             cwd: appPath,
             env
         };
-        return yield (0, util_1.promisify)(child_process_1.execFile)(state_1.default.php, ['artisan', 'native:config'], phpOptions);
+        let command = ['artisan', 'native:config'];
+        if (runningSecureBuild()) {
+            command.unshift((0, path_1.join)(appPath, 'build', '__nativephp_app_bundle'));
+        }
+        return yield (0, util_1.promisify)(child_process_1.execFile)(state_1.default.php, command, phpOptions);
     });
 }
 exports.retrieveNativePHPConfig = retrieveNativePHPConfig;
 function callPhp(args, options, phpIniSettings = {}) {
+    if (args[0] === 'artisan' && runningSecureBuild()) {
+        args.unshift((0, path_1.join)(appPath, 'build', '__nativephp_app_bundle'));
+    }
     let defaultIniSettings = {
         'memory_limit': '512M',
         'curl.cainfo': state_1.default.caCert,
@@ -75,6 +86,9 @@ function callPhp(args, options, phpIniSettings = {}) {
     Object.keys(iniSettings).forEach(key => {
         args.unshift('-d', `${key}=${iniSettings[key]}`);
     });
+    if (parseInt(process.env.SHELL_VERBOSITY) > 0) {
+        console.log('Calling PHP', state_1.default.php, args);
+    }
     return (0, child_process_1.spawn)(state_1.default.php, args, {
         cwd: options.cwd,
         env: Object.assign(Object.assign({}, process.env), options.env),
@@ -112,7 +126,6 @@ function ensureAppFoldersAreAvailable() {
 function startQueueWorker(secret, apiPort, phpIniSettings = {}) {
     const env = {
         APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
-        APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
         NATIVEPHP_STORAGE_PATH: storagePath,
         NATIVEPHP_DATABASE_PATH: databaseFile,
         NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
@@ -146,7 +159,7 @@ function getPath(name) {
 function getDefaultEnvironmentVariables(secret, apiPort) {
     return {
         APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
-        APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
+        LARAVEL_STORAGE_PATH: storagePath,
         NATIVEPHP_STORAGE_PATH: storagePath,
         NATIVEPHP_DATABASE_PATH: databaseFile,
         NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
@@ -164,6 +177,9 @@ function getDefaultEnvironmentVariables(secret, apiPort) {
         NATIVEPHP_RECENT_PATH: getPath('recent'),
     };
 }
+function runningSecureBuild() {
+    return (0, fs_1.existsSync)((0, path_1.join)(appPath, 'build', '__nativephp_app_bundle'));
+}
 function serveApp(secret, apiPort, phpIniSettings) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         const appPath = getAppPath();
@@ -176,18 +192,20 @@ function serveApp(secret, apiPort, phpIniSettings) {
             env
         };
         const store = new electron_store_1.default();
-        callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings);
-        if (store.get('migrated_version') !== electron_1.app.getVersion() && process.env.NODE_ENV !== 'development') {
+        if (!runningSecureBuild()) {
+            callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings);
+        }
+        if (store.get('migrated_version') !== electron_1.app.getVersion() && (process.env.NODE_ENV !== 'development' || runningSecureBuild())) {
             console.log('Migrating database...');
             callPhp(['artisan', 'migrate', '--force'], phpOptions, phpIniSettings);
             store.set('migrated_version', electron_1.app.getVersion());
         }
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === 'development' && !runningSecureBuild()) {
             console.log('Skipping Database migration while in development.');
             console.log('You may migrate manually by running: php artisan native:migrate');
         }
         const phpPort = yield getPhpPort();
-        const serverPath = (0, path_1.join)(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
+        let serverPath = (0, path_1.join)(appPath, 'build', '__nativephp_app_bundle');
         const phpServer = callPhp(['-S', `127.0.0.1:${phpPort}`, serverPath], {
             cwd: (0, path_1.join)(appPath, 'public'),
             env

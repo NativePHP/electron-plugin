@@ -23,18 +23,24 @@ async function getPhpPort() {
 }
 
 async function retrievePhpIniSettings() {
-  const env = {
-    NATIVEPHP_RUNNING: 'true',
-    NATIVEPHP_STORAGE_PATH: storagePath,
-    NATIVEPHP_DATABASE_PATH: databaseFile,
-  };
+    const env = {
+        NATIVEPHP_RUNNING: 'true',
+        NATIVEPHP_STORAGE_PATH: storagePath,
+        NATIVEPHP_DATABASE_PATH: databaseFile,
+    };
 
-  const phpOptions = {
-    cwd: appPath,
-    env
-  };
+    const phpOptions = {
+        cwd: appPath,
+        env
+    };
 
-  return await promisify(execFile)(state.php, ['artisan', 'native:php-ini'], phpOptions);
+    let command = ['artisan', 'native:php-ini'];
+
+    if (runningSecureBuild()) {
+        command.unshift(join(appPath, 'build', '__nativephp_app_bundle'));
+    }
+
+    return await promisify(execFile)(state.php, command, phpOptions);
 }
 
 async function retrieveNativePHPConfig() {
@@ -49,10 +55,20 @@ async function retrieveNativePHPConfig() {
         env
     };
 
-    return await promisify(execFile)(state.php, ['artisan', 'native:config'], phpOptions);
+    let command = ['artisan', 'native:config'];
+
+    if (runningSecureBuild()) {
+        command.unshift(join(appPath, 'build', '__nativephp_app_bundle'));
+    }
+
+    return await promisify(execFile)(state.php, command, phpOptions);
 }
 
 function callPhp(args, options, phpIniSettings = {}) {
+    if (args[0] === 'artisan' && runningSecureBuild()) {
+        args.unshift(join(appPath, 'build', '__nativephp_app_bundle'));
+    }
+
     let defaultIniSettings = {
       'memory_limit': '512M',
       'curl.cainfo': state.caCert,
@@ -64,6 +80,10 @@ function callPhp(args, options, phpIniSettings = {}) {
     Object.keys(iniSettings).forEach(key => {
       args.unshift('-d', `${key}=${iniSettings[key]}`);
     });
+
+    if (parseInt(process.env.SHELL_VERBOSITY) > 0) {
+        console.log('Calling PHP', state.php, args)
+    }
 
     return spawn(
         state.php,
@@ -122,7 +142,7 @@ function ensureAppFoldersAreAvailable() {
 function startQueueWorker(secret, apiPort, phpIniSettings = {}) {
     const env = {
         APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
-        APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
+        // APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
         NATIVEPHP_STORAGE_PATH: storagePath,
         NATIVEPHP_DATABASE_PATH: databaseFile,
         NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
@@ -161,7 +181,8 @@ function getPath(name: string) {
 function getDefaultEnvironmentVariables(secret, apiPort) {
   return {
     APP_ENV: process.env.NODE_ENV === 'development' ? 'local' : 'production',
-    APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
+    // APP_DEBUG: process.env.NODE_ENV === 'development' ? 'true' : 'false',
+    LARAVEL_STORAGE_PATH: storagePath,
     NATIVEPHP_STORAGE_PATH: storagePath,
     NATIVEPHP_DATABASE_PATH: databaseFile,
     NATIVEPHP_API_URL: `http://localhost:${apiPort}/api/`,
@@ -178,6 +199,10 @@ function getDefaultEnvironmentVariables(secret, apiPort) {
     NATIVEPHP_VIDEOS_PATH: getPath('videos'),
     NATIVEPHP_RECENT_PATH: getPath('recent'),
   };
+}
+
+function runningSecureBuild() {
+    return existsSync(join(appPath, 'build', '__nativephp_app_bundle'))
 }
 
 function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
@@ -201,23 +226,31 @@ function serveApp(secret, apiPort, phpIniSettings): Promise<ProcessResult> {
 
         // Make sure the storage path is linked - as people can move the app around, we
         // need to run this every time the app starts
-        callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings)
+        if (! runningSecureBuild()) {
+            callPhp(['artisan', 'storage:link', '--force'], phpOptions, phpIniSettings)
+        }
 
         // Migrate the database
-        if (store.get('migrated_version') !== app.getVersion() && process.env.NODE_ENV !== 'development') {
+        if (store.get('migrated_version') !== app.getVersion() && (process.env.NODE_ENV !== 'development' || runningSecureBuild())) {
             console.log('Migrating database...')
             callPhp(['artisan', 'migrate', '--force'], phpOptions, phpIniSettings)
             store.set('migrated_version', app.getVersion())
         }
 
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === 'development' && ! runningSecureBuild()) {
             console.log('Skipping Database migration while in development.')
             console.log('You may migrate manually by running: php artisan native:migrate')
         }
 
         const phpPort = await getPhpPort();
 
-        const serverPath = join(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php')
+        let serverPath = join(appPath, 'build', '__nativephp_app_bundle');
+
+        // if (process.env.NODE_ENV !== 'production' || ! runningSecureBuild()) {
+        //     console.log('* * * Running from source * * *');
+        //     serverPath = join(appPath, 'vendor', 'laravel', 'framework', 'src', 'Illuminate', 'Foundation', 'resources', 'server.php');
+        // }
+
         const phpServer = callPhp(['-S', `127.0.0.1:${phpPort}`, serverPath], {
             cwd: join(appPath, 'public'),
             env
